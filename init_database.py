@@ -52,7 +52,7 @@ def init_database():
             total_questions INTEGER DEFAULT 0,
             correct_answers INTEGER DEFAULT 0,
             accuracy_rate REAL,
-            completed BOOLEAN DEFAULT 0
+            completed BOOLEAN DEFAULT FALSE
         )
     ''')
     

@@ -108,7 +108,7 @@ SCHEMA_POSTGRESQL = {
             total_questions INTEGER DEFAULT 0,
             correct_answers INTEGER DEFAULT 0,
             accuracy_rate REAL DEFAULT 0.0,
-            completed BOOLEAN DEFAULT 0
+            completed BOOLEAN DEFAULT FALSE
         )
     ''',
     'user_answers': '''
