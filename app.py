@@ -19,6 +19,7 @@ import sqlite3
 from datetime import datetime, timedelta
 from functools import wraps
 
+
 # Baris 11-15: Definisikan app
 app = Flask(__name__)
 app.secret_key = os.environ.get('SECRET_KEY', 'dev-secret-key')  # Ganti dengan key kuat
@@ -77,6 +78,40 @@ logger.info("🚀 Starting SRS Vocabulary App")
 is_railway = os.environ.get('RAILWAY_ENVIRONMENT') or os.environ.get('RAILWAY')
 DATABASE = '/tmp/srs_vocab.db' if is_railway else 'srs_vocab.db'
 logger.info(f"📁 Using database path: {DATABASE}")
+
+def get_db():
+    if 'db' not in g:
+        logger.info("🔌 Establishing database connection...")
+        # Try PostgreSQL first (Railway)
+        db_url = os.environ.get('DATABASE_URL')
+
+        if db_url and db_url.startswith('postgres'):
+            # Convert postgres:// to postgresql://
+            if db_url.startswith('postgres://'):
+                db_url = db_url.replace('postgres://', 'postgresql://', 1)
+
+            try:
+                import psycopg2
+                g.db = psycopg2.connect(db_url, sslmode='require')
+                logger.info("✅ Connected to PostgreSQL database")
+                # Note: PostgreSQL doesn't need row_factory like SQLite
+            except ImportError:
+                logger.warning("⚠️  PostgreSQL driver not available, falling back to SQLite")
+                g.db = sqlite3.connect(DATABASE, check_same_thread=False)
+                g.db.row_factory = sqlite3.Row
+                logger.info("✅ Connected to SQLite database (fallback)")
+        else:
+            # Fallback to SQLite (built-in, always works)
+            g.db = sqlite3.connect(DATABASE, check_same_thread=False)
+            g.db.row_factory = sqlite3.Row
+            logger.info("✅ Connected to SQLite database")
+    return g.db
+
+@app.teardown_appcontext
+def close_db(e=None):
+    db = g.pop('db', None)
+    if db is not None:
+        db.close()
 
 # Initialize database on app startup with new system
 def init_app_database():
@@ -176,40 +211,6 @@ def require_admin_auth(f):
             return jsonify({'error': 'Unauthorized'}), 401
         return f(*args, **kwargs)
     return decorated
-
-def get_db():
-    if 'db' not in g:
-        logger.info("🔌 Establishing database connection...")
-        # Try PostgreSQL first (Railway)
-        db_url = os.environ.get('DATABASE_URL')
-
-        if db_url and db_url.startswith('postgres'):
-            # Convert postgres:// to postgresql://
-            if db_url.startswith('postgres://'):
-                db_url = db_url.replace('postgres://', 'postgresql://', 1)
-
-            try:
-                import psycopg2
-                g.db = psycopg2.connect(db_url, sslmode='require')
-                logger.info("✅ Connected to PostgreSQL database")
-                # Note: PostgreSQL doesn't need row_factory like SQLite
-            except ImportError:
-                logger.warning("⚠️  PostgreSQL driver not available, falling back to SQLite")
-                g.db = sqlite3.connect(DATABASE, check_same_thread=False)
-                g.db.row_factory = sqlite3.Row
-                logger.info("✅ Connected to SQLite database (fallback)")
-        else:
-            # Fallback to SQLite (built-in, always works)
-            g.db = sqlite3.connect(DATABASE, check_same_thread=False)
-            g.db.row_factory = sqlite3.Row
-            logger.info("✅ Connected to SQLite database")
-    return g.db
-
-@app.teardown_appcontext
-def close_db(e=None):
-    db = g.pop('db', None)
-    if db is not None:
-        db.close()
 
 def init_db():
     logger.info("🗄️  Initializing database tables...")
