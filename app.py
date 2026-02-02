@@ -4,29 +4,97 @@ import sqlite3
 import os
 import csv
 import io
+import logging
 from functools import wraps
 from datetime import datetime, timedelta
 from srs_algorithm import SRSAlgorithm
 
+# Setup logging for Railway deployment
+def setup_logging():
+    """Setup comprehensive logging for Railway environment"""
+    log_level = os.environ.get('LOG_LEVEL', 'INFO').upper()
+    numeric_level = getattr(logging, log_level, logging.INFO)
+
+    # Create logger
+    logger = logging.getLogger()
+    logger.setLevel(numeric_level)
+
+    # Create formatter
+    formatter = logging.Formatter(
+        '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+    )
+
+    # Console handler (always available)
+    console_handler = logging.StreamHandler()
+    console_handler.setLevel(numeric_level)
+    console_handler.setFormatter(formatter)
+    logger.addHandler(console_handler)
+
+    # File handler for Railway (write to /tmp/)
+    if os.environ.get('RAILWAY_ENVIRONMENT'):
+        try:
+            file_handler = logging.FileHandler('/tmp/app.log')
+            file_handler.setLevel(numeric_level)
+            file_handler.setFormatter(formatter)
+            logger.addHandler(file_handler)
+            print("✅ Railway logging to /tmp/app.log enabled")
+        except Exception as e:
+            print(f"⚠️  Could not setup file logging: {e}")
+
+    return logger
+
+# Initialize logging
+logger = setup_logging()
+logger.info("🚀 Starting SRS Vocabulary App")
+
+# Database path - use /tmp/ for Railway to avoid read-only filesystem issues
+# Check for both RAILWAY_ENVIRONMENT and RAILWAY env vars
+is_railway = os.environ.get('RAILWAY_ENVIRONMENT') or os.environ.get('RAILWAY')
+DATABASE = '/tmp/srs_vocab.db' if is_railway else 'srs_vocab.db'
+logger.info(f"📁 Using database path: {DATABASE}")
+
 # Setelah imports
 def ensure_database():
-    if not os.path.exists('srs_vocab.db'):
-        print("⚠️  Database not found. Initializing...")
-        from database import init_database  # atau import init_database function
-        init_database()
+    try:
+        logger.info("🔍 Checking database initialization...")
+        if not os.path.exists(DATABASE):
+            logger.warning(f"⚠️  Database not found at {DATABASE}. Initializing...")
+            from database import init_database  # atau import init_database function
+            init_database()
+            logger.info("✅ Database file created and initialized")
+        else:
+            logger.info("✅ Database file already exists")
+        logger.info("✅ Database initialization check completed")
+    except Exception as e:
+        logger.error(f"❌ Database initialization failed: {e}", exc_info=True)
+        raise
 
 # Panggil sebelum app run
-ensure_database()
+try:
+    ensure_database()
+    logger.info("✅ Database check completed")
+except Exception as e:
+    logger.critical(f"❌ Critical error during database setup: {e}", exc_info=True)
+    raise
 
-srs = SRSAlgorithm()
+try:
+    srs = SRSAlgorithm()
+    logger.info("✅ SRS Algorithm initialized")
+except Exception as e:
+    logger.error(f"❌ SRS Algorithm initialization failed: {e}", exc_info=True)
+    raise
 
-app = Flask(__name__)
-CORS(app)  # Enable CORS for frontend
-
-DATABASE = 'srs_vocab.db'
+try:
+    app = Flask(__name__)
+    CORS(app)  # Enable CORS for frontend
+    logger.info("✅ Flask app created successfully")
+except Exception as e:
+    logger.error(f"❌ Flask app creation failed: {e}", exc_info=True)
+    raise
 
 def get_db():
     if 'db' not in g:
+        logger.info("🔌 Establishing database connection...")
         # Try PostgreSQL first (Railway)
         db_url = os.environ.get('DATABASE_URL')
 
@@ -38,15 +106,18 @@ def get_db():
             try:
                 import psycopg2
                 g.db = psycopg2.connect(db_url, sslmode='require')
+                logger.info("✅ Connected to PostgreSQL database")
                 # Note: PostgreSQL doesn't need row_factory like SQLite
             except ImportError:
-                print("PostgreSQL driver not available, falling back to SQLite")
+                logger.warning("⚠️  PostgreSQL driver not available, falling back to SQLite")
                 g.db = sqlite3.connect(DATABASE, check_same_thread=False)
                 g.db.row_factory = sqlite3.Row
+                logger.info("✅ Connected to SQLite database (fallback)")
         else:
             # Fallback to SQLite (built-in, always works)
             g.db = sqlite3.connect(DATABASE, check_same_thread=False)
             g.db.row_factory = sqlite3.Row
+            logger.info("✅ Connected to SQLite database")
     return g.db
 
 @app.teardown_appcontext
@@ -56,6 +127,7 @@ def close_db(e=None):
         db.close()
 
 def init_db():
+    logger.info("🗄️  Initializing database tables...")
     db = get_db()
     cursor = db.cursor()
     cursor.executescript("""
@@ -124,6 +196,7 @@ def init_db():
         ('quintessential', 'paling murni', 'adjective', 'This dish is the quintessential Italian pasta.', 4.2);
     """)
     db.commit()
+    logger.info("✅ Database tables initialized successfully")
 
 # Initialize database on app startup
 with app.app_context():
@@ -436,6 +509,32 @@ def post_review():
 @app.route('/api/test')
 def test_connection():
     return jsonify({'status': 'ok'})
+
+@app.route('/health')
+def health_check():
+    """Health check endpoint for Railway deployment monitoring"""
+    try:
+        # Test database connection
+        conn = get_db()
+        cursor = conn.cursor()
+        cursor.execute('SELECT 1')
+        conn.close()
+
+        return jsonify({
+            'status': 'healthy',
+            'database': 'connected',
+            'db_path': DATABASE,
+            'timestamp': datetime.now().isoformat(),
+            'environment': 'railway' if os.environ.get('RAILWAY_ENVIRONMENT') else 'local'
+        })
+    except Exception as e:
+        logger.error(f"Health check failed: {e}", exc_info=True)
+        return jsonify({
+            'status': 'unhealthy',
+            'error': str(e),
+            'db_path': DATABASE,
+            'timestamp': datetime.now().isoformat()
+        }), 500
 
 @app.route('/api/next-word')
 def get_next_word():
@@ -896,9 +995,12 @@ def session_answer():
         conn.close()
 
 if __name__ == '__main__':
-    app.run(debug=True, port=5000, threaded=True)
-
-if __name__ == '__main__':
     import os
+    import sys
     port = int(os.environ.get('PORT', 5000))
+    logger.info(f"🚀 App starting in {'RAILWAY' if is_railway else 'LOCAL'} mode")
+    logger.info(f"📁 Database path: {DATABASE}")
+    logger.info(f"🌐 Port: {port}")
+    logger.info(f"🐍 Python: {sys.version}")
+    logger.info(f"🌐 Starting Flask server on port {port}")
     app.run(host='0.0.0.0', port=port, debug=False)
