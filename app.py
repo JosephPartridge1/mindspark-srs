@@ -8,7 +8,6 @@ import logging
 from functools import wraps
 from datetime import datetime, timedelta
 from srs_algorithm import SRSAlgorithm
-from db_init import init_database, check_database_health, detect_db_type
 
 # Setup logging for Railway deployment
 def setup_logging():
