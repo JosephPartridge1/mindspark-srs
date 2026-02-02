@@ -190,6 +190,94 @@ class SimpleDatabase:
         if self.connection:
             self.connection.close()
 
+# Standalone init_database function for app.py import
+def init_database(db_name='srs_vocab.db'):
+    """Initialize database with required tables"""
+    conn = sqlite3.connect(db_name, check_same_thread=False)
+    cursor = conn.cursor()
+
+    # Updated tables for Duolingo-style SRS
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS words (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            english TEXT NOT NULL,
+            indonesian TEXT NOT NULL,
+            part_of_speech TEXT DEFAULT 'noun',
+            example_sentence TEXT DEFAULT '',
+            difficulty_score FLOAT DEFAULT 1.0,
+            interval INTEGER DEFAULT 1,  -- in minutes for testing, later days
+            repetitions INTEGER DEFAULT 0,
+            ease_factor REAL DEFAULT 2.5,
+            next_review DATETIME,
+            last_reviewed DATETIME,
+            streak INTEGER DEFAULT 0,
+            added_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+    ''')
+
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS reviews (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            word_id INTEGER NOT NULL,
+            review_time DATETIME DEFAULT CURRENT_TIMESTAMP,
+            correct BOOLEAN NOT NULL,
+            response_time REAL,  -- in seconds
+            user_answer TEXT NOT NULL,
+            FOREIGN KEY(word_id) REFERENCES words(id)
+        )
+    ''')
+
+    # Admin dashboard tables for session tracking
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS learning_sessions (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            session_token TEXT UNIQUE,  -- Untuk identifikasi frontend
+            user_ip TEXT,
+            user_agent TEXT,
+            start_time DATETIME DEFAULT CURRENT_TIMESTAMP,
+            end_time DATETIME,
+            total_questions INTEGER DEFAULT 0,
+            correct_answers INTEGER DEFAULT 0,
+            accuracy_rate REAL,
+            completed BOOLEAN DEFAULT 0
+        )
+    ''')
+
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS user_answers (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            session_token TEXT,
+            word_id INTEGER,
+            user_answer TEXT,
+            correct BOOLEAN,
+            response_time REAL,
+            answered_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (session_token) REFERENCES learning_sessions(session_token) ON DELETE CASCADE
+        )
+    ''')
+
+    # Seed data with 10 words
+    cursor.execute('SELECT COUNT(*) FROM words')
+    if cursor.fetchone()[0] == 0:
+        cursor.executemany('''
+            INSERT INTO words (english, indonesian, part_of_speech, example_sentence, difficulty_score) VALUES (?, ?, ?, ?, ?)
+        ''', [
+            ('apple', 'apel', 'noun', 'I eat an apple every day.', 1.0),
+            ('book', 'buku', 'noun', 'This is an interesting book.', 1.0),
+            ('run', 'berlari', 'verb', 'She likes to run in the park.', 1.5),
+            ('happy', 'bahagia', 'adjective', 'The child looks very happy.', 1.2),
+            ('computer', 'komputer', 'noun', 'I use a computer for work.', 2.0),
+            ('algorithm', 'algoritma', 'noun', 'The algorithm solves complex problems.', 3.0),
+            ('ephemeral', 'sementara', 'adjective', 'Life is ephemeral and fleeting.', 4.0),
+            ('ubiquitous', 'dimana-mana', 'adjective', 'Smartphones are ubiquitous nowadays.', 3.5),
+            ('serendipity', 'kebetulan baik', 'noun', 'Finding this book was pure serendipity.', 4.5),
+            ('quintessential', 'paling murni', 'adjective', 'This dish is the quintessential Italian pasta.', 4.2)
+        ])
+
+    conn.commit()
+    conn.close()
+    return True
+
 # Quick test function
 def test_database():
     db = SimpleDatabase()

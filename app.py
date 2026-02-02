@@ -60,7 +60,7 @@ def ensure_database():
         if not os.path.exists(DATABASE):
             logger.warning(f"⚠️  Database not found at {DATABASE}. Initializing...")
             from database import init_database  # atau import init_database function
-            init_database()
+            init_database(DATABASE)
             logger.info("✅ Database file created and initialized")
         else:
             logger.info("✅ Database file already exists")
@@ -1004,3 +1004,18 @@ if __name__ == '__main__':
     logger.info(f"🐍 Python: {sys.version}")
     logger.info(f"🌐 Starting Flask server on port {port}")
     app.run(host='0.0.0.0', port=port, debug=False)
+
+import sys
+import traceback
+
+try:
+    from flask import Flask
+    app = Flask(__name__)
+    
+    # ... semua kode Anda ...
+    
+except Exception as e:
+    print(f"❌ APP INIT ERROR: {e}", file=sys.stderr)
+    traceback.print_exc(file=sys.stderr)
+    # Exit dengan error code
+    sys.exit(1)
