@@ -1,6 +1,5 @@
 from flask import Flask, jsonify, request, render_template, g, Response
 from flask_cors import CORS
-import sqlite3
 import os
 import csv
 import io
@@ -9,6 +8,7 @@ from functools import wraps
 from datetime import datetime, timedelta
 from srs_algorithm import SRSAlgorithm
 from db_init import init_database, check_database_health, detect_db_type
+from database_adapter import db_adapter
 
 # Baris 1-10: Imports
 from flask import Flask, jsonify, request, render_template, g, session
@@ -225,22 +225,18 @@ def home():
 @app.route('/api/words')
 def get_words():
     try:
-        conn = get_db()
-        cursor = conn.cursor()
-
-        # Get all words
-        cursor.execute('SELECT id, english, indonesian, part_of_speech, example_sentence FROM words ORDER BY id')
+        cursor = db_adapter.execute('SELECT id, english, indonesian, part_of_speech, example_sentence FROM words ORDER BY id')
         words = []
-        for row in cursor.fetchall():
+        for row in db_adapter.fetchall(cursor):
             words.append({
-                'id': row[0],
-                'english': row[1],
-                'indonesian': row[2],
-                'part_of_speech': row[3],
-                'example_sentence': row[4]
+                'id': row['id'],
+                'english': row['english'],
+                'indonesian': row['indonesian'],
+                'part_of_speech': row['part_of_speech'],
+                'example_sentence': row['example_sentence']
             })
 
-        conn.close()
+        db_adapter.commit()
         return jsonify({'words': words})
     except Exception as e:
         return jsonify({'error': str(e)}), 500
@@ -708,11 +704,8 @@ def get_settings():
 @require_admin_auth
 def admin_stats():
     try:
-        conn = get_db()
-        cursor = conn.cursor()
-
         # Aggregate data
-        cursor.execute('''
+        cursor = db_adapter.execute('''
             SELECT
                 COUNT(DISTINCT user_ip) as unique_users,
                 COUNT(*) as total_sessions,
@@ -722,21 +715,21 @@ def admin_stats():
             FROM learning_sessions
             WHERE end_time IS NOT NULL
         ''')
-        stats = cursor.fetchone()
+        stats = db_adapter.fetchone(cursor)
 
         # Recent sessions
-        cursor.execute('''
+        cursor = db_adapter.execute('''
             SELECT * FROM learning_sessions
             ORDER BY end_time DESC
             LIMIT 10
         ''')
-        recent = cursor.fetchall()
+        recent = db_adapter.fetchall(cursor)
 
-        conn.close()
+        db_adapter.commit()
 
         return jsonify({
-            "overview": dict(stats) if stats else {},
-            "recent_sessions": [dict(row) for row in recent] if recent else []
+            "overview": stats if stats else {},
+            "recent_sessions": recent if recent else []
         })
     except Exception as e:
         return jsonify({'error': str(e)}), 500
