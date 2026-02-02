@@ -20,7 +20,7 @@ ensure_database()
 
 srs = SRSAlgorithm()
 
-app = Flask(__name__, static_folder='static', template_folder='templates')
+app = Flask(__name__)
 CORS(app)  # Enable CORS for frontend
 
 DATABASE = 'srs_vocab.db'
@@ -898,4 +898,7 @@ def session_answer():
 if __name__ == '__main__':
     app.run(debug=True, port=5000, threaded=True)
 
-
+if __name__ == '__main__':
+    import os
+    port = int(os.environ.get('PORT', 5000))
+    app.run(host='0.0.0.0', port=port, debug=False)
