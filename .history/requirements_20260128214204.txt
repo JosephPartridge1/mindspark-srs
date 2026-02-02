@@ -1,4 +1,0 @@
-flask==2.3.0
-flask-cors
-sqlite3
-matplotlib

@@ -1,8 +1,7 @@
-﻿__pycache__/
+﻿.history/
+__pycache__/
 *.pyc
+venv/
 *.db
 .env
-venv/
-instance/
 *.log
-.DS_Store

@@ -1,5 +1,0 @@
-echo flask==2.3.3 > requirements.txt
-echo flask-cors==4.0.0 >> requirements.txt
-echo gunicorn==21.2.0 >> requirements.txt
-echo python-dotenv==1.0.0 >> requirements.txt
-echo psycopg2-binary==2.9.9 >> requirements.txt
