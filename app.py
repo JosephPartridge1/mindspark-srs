@@ -8,6 +8,31 @@ import logging
 from functools import wraps
 from datetime import datetime, timedelta
 from srs_algorithm import SRSAlgorithm
+from db_init import init_database, check_database_health, detect_db_type
+
+# Baris 1-10: Imports
+from flask import Flask, jsonify, request, render_template, g, session
+import os
+import sys
+import traceback
+import sqlite3
+from datetime import datetime, timedelta
+from functools import wraps
+
+# Baris 11-15: Definisikan app
+app = Flask(__name__)
+app.secret_key = os.environ.get('SECRET_KEY', 'dev-secret-key')  # Ganti dengan key kuat
+
+# Baris 16-30: Helper functions
+def require_admin_auth(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        # Cek session atau token auth
+        if not session.get('is_admin'):
+            return jsonify({"error": "Admin access required"}), 403
+        return f(*args, **kwargs)
+    return decorated_function
+
 
 # Setup logging for Railway deployment
 def setup_logging():
@@ -53,29 +78,78 @@ is_railway = os.environ.get('RAILWAY_ENVIRONMENT') or os.environ.get('RAILWAY')
 DATABASE = '/tmp/srs_vocab.db' if is_railway else 'srs_vocab.db'
 logger.info(f"📁 Using database path: {DATABASE}")
 
-# Setelah imports
-def ensure_database():
+# Initialize database on app startup with new system
+def init_app_database():
+    """Initialize database using the new db_init system"""
     try:
-        logger.info("🔍 Checking database initialization...")
-        if not os.path.exists(DATABASE):
-            logger.warning(f"⚠️  Database not found at {DATABASE}. Initializing...")
-            from database import init_database  # atau import init_database function
-            init_database(DATABASE)
-            logger.info("✅ Database file created and initialized")
+        logger.info("🔍 Checking database health and initialization...")
+        conn = get_db()
+
+        # Check if database needs initialization
+        health = check_database_health(conn)
+        if not health['healthy']:
+            logger.warning(f"⚠️  Database not healthy: {health.get('error', 'Unknown error')}")
+            logger.info("🚀 Initializing database...")
+
+            # Detect database type
+            db_type = detect_db_type(conn)
+            logger.info(f"📊 Detected database type: {db_type}")
+
+            # Initialize database
+            init_database(conn, db_type)
+            logger.info("✅ Database initialization completed")
         else:
-            logger.info("✅ Database file already exists")
-        logger.info("✅ Database initialization check completed")
+            logger.info("✅ Database is healthy and initialized")
+
+        conn.close()
+        return True
+
     except Exception as e:
         logger.error(f"❌ Database initialization failed: {e}", exc_info=True)
         raise
 
-# Panggil sebelum app run
+# Call database initialization on app startup
 try:
-    ensure_database()
-    logger.info("✅ Database check completed")
+    with app.app_context():
+        init_app_database()
+    logger.info("✅ Database initialization check completed")
 except Exception as e:
     logger.critical(f"❌ Critical error during database setup: {e}", exc_info=True)
     raise
+
+# Manual database initialization endpoint
+@app.route('/api/init-db', methods=['POST'])
+@require_admin_auth
+def manual_init_db():
+    """Manually trigger database initialization (admin only)"""
+    try:
+        logger.info("🔧 Manual database initialization requested")
+        with app.app_context():
+            conn = get_db()
+            db_type = detect_db_type(conn)
+            init_database(conn, db_type)
+            health = check_database_health(conn)
+            conn.close()
+
+        return jsonify({
+            'status': 'success',
+            'message': 'Database initialized successfully',
+            'database_type': db_type,
+            'health': health
+        })
+
+    except Exception as e:
+        logger.error(f"❌ Manual database initialization failed: {e}", exc_info=True)
+        return jsonify({
+            'status': 'error',
+            'message': str(e)
+        }), 500
+
+# Legacy database functions (kept for compatibility)
+def ensure_database():
+    """Legacy function - now handled by init_app_database()"""
+    logger.warning("⚠️  ensure_database() is deprecated, using new init_app_database() instead")
+    return True
 
 try:
     srs = SRSAlgorithm()
@@ -91,6 +165,17 @@ try:
 except Exception as e:
     logger.error(f"❌ Flask app creation failed: {e}", exc_info=True)
     raise
+
+# Admin authentication decorator
+def require_admin_auth(f):
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        auth = request.headers.get('Authorization')
+        admin_token = os.environ.get('ADMIN_TOKEN', 'dev_admin_123')
+        if not auth or auth != f'Bearer {admin_token}':
+            return jsonify({'error': 'Unauthorized'}), 401
+        return f(*args, **kwargs)
+    return decorated
 
 def get_db():
     if 'db' not in g:
@@ -198,9 +283,9 @@ def init_db():
     db.commit()
     logger.info("✅ Database tables initialized successfully")
 
-# Initialize database on app startup
-with app.app_context():
-    init_db()
+def initialize_app():
+    with app.app_context():
+        init_db()
 
 @app.route('/')
 def home():
@@ -688,17 +773,6 @@ def get_due_count():
 def get_settings():
     return jsonify({"theme": "dark", "language": "en"})
 
-# Admin authentication decorator
-def require_admin_auth(f):
-    @wraps(f)
-    def decorated(*args, **kwargs):
-        auth = request.headers.get('Authorization')
-        admin_token = os.environ.get('ADMIN_TOKEN', 'dev_admin_123')
-        if not auth or auth != f'Bearer {admin_token}':
-            return jsonify({'error': 'Unauthorized'}), 401
-        return f(*args, **kwargs)
-    return decorated
-
 @app.route('/admin/stats')
 @require_admin_auth
 def admin_stats():
@@ -1003,19 +1077,5 @@ if __name__ == '__main__':
     logger.info(f"🌐 Port: {port}")
     logger.info(f"🐍 Python: {sys.version}")
     logger.info(f"🌐 Starting Flask server on port {port}")
+    initialize_app()
     app.run(host='0.0.0.0', port=port, debug=False)
-
-import sys
-import traceback
-
-try:
-    from flask import Flask
-    app = Flask(__name__)
-    
-    # ... semua kode Anda ...
-    
-except Exception as e:
-    print(f"❌ APP INIT ERROR: {e}", file=sys.stderr)
-    traceback.print_exc(file=sys.stderr)
-    # Exit dengan error code
-    sys.exit(1)
