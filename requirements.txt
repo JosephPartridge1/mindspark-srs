@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # Core Dependencies
 flask==2.3.3
 flask-cors==4.0.0
@@ -14,3 +15,8 @@ psycopg2-binary==2.9.9
 # Optional Utilities
 # werkzeug==2.3.7  # Already included with Flask
 # jinja2==3.1.2    # Already included with Flask
+=======
+flask==2.3.0
+flask-cors
+matplotlib
+>>>>>>> 90d3395974775a8d1fca477a51804c06a70d6f56
