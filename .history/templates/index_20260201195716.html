@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cyber SRS Learning Hub</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <!-- Particle Background -->
+    <div class="particles" id="particles"></div>
+
+    <header>
+        <h1>Cyber SRS Learning Hub</h1>
+        <div class="subtitle">Duolingo-style Vocabulary Trainer</div>
+    </header>
+
+    <main>
+        <!-- PROGRESS BAR -->
+        <div class="progress-container">
+            <div class="progress-bar" id="progress-bar"></div>
+            <div class="progress-text" id="progress-text">0/0</div>
+        </div>
+
+        <!-- CURRENT WORD CARD -->
+        <div class="word-card">
+            <div class="word-english" id="current-word">loading...</div>
+            <div class="word-details">
+                <span class="part-of-speech" id="part-of-speech">noun</span>
+                <div class="example-sentence" id="example-sentence">Loading example...</div>
+            </div>
+        </div>
+
+        <!-- INPUT AREA -->
+        <div class="input-container">
+            <input
+                type="text"
+                id="answer-input"
+                placeholder="Ketik terjemahan dalam Bahasa Indonesia..."
+                autocomplete="off"
+                autofocus
+            >
+            <button id="submit-btn">Submit (Enter)</button>
+        </div>
+
+        <!-- FEEDBACK MESSAGE -->
+        <div class="feedback" id="feedback"></div>
+
+        <!-- SESSION INFO -->
+        <div class="session-info">
+            <div>Words due: <span id="due-count">0</span></div>
+            <div>Current streak: <span id="current-streak">0</span></div>
+        </div>
+    </main>
+
+    <!-- Scripts -->
+    <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+</body>
+</html>

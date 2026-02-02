@@ -1,0 +1,870 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Statistik Pembelajaran - SRS System</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      color: #333;
+      padding: 20px;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    .header {
+      text-align: center;
+      margin-bottom: 30px;
+      color: white;
+    }
+
+    .header h1 {
+      font-size: 2rem;
+      margin-bottom: 10px;
+      text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+    }
+
+    .header p {
+      font-size: 1.1rem;
+      opacity: 0.9;
+    }
+
+    .stats-overview {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 20px;
+      margin-bottom: 30px;
+    }
+
+    .stat-card {
+      background: white;
+      border-radius: 15px;
+      padding: 20px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+      text-align: center;
+      transition: transform 0.3s ease;
+    }
+
+    .stat-card:hover {
+      transform: translateY(-5px);
+    }
+
+    .stat-card.retention { border-left: 5px solid #27ae60; }
+    .stat-card.interval { border-left: 5px solid #3498db; }
+    .stat-card.mastery { border-left: 5px solid #f39c12; }
+    .stat-card.streak { border-left: 5px solid #e74c3c; }
+
+    .stat-number {
+      font-size: 2rem;
+      font-weight: bold;
+      margin-bottom: 5px;
+    }
+
+    .stat-label {
+      color: #666;
+      font-size: 0.9rem;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .charts-section {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+      gap: 30px;
+      margin-bottom: 30px;
+    }
+
+    .chart-card {
+      background: white;
+      border-radius: 15px;
+      padding: 25px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+    }
+
+    .chart-title {
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin-bottom: 20px;
+      color: #2c3e50;
+      text-align: center;
+    }
+
+    .line-chart, .bar-chart {
+      height: 250px;
+      position: relative;
+      margin-bottom: 20px;
+    }
+
+    .chart-grid {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    .grid-line {
+      border-top: 1px solid #ecf0f1;
+      height: 1px;
+    }
+
+    .grid-line:last-child {
+      border-bottom: 1px solid #ecf0f1;
+    }
+
+    .line-points {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      padding: 20px;
+    }
+
+    .line-point {
+      width: 8px;
+      height: 8px;
+      background: #3498db;
+      border-radius: 50%;
+      position: relative;
+    }
+
+    .line-point::after {
+      content: '';
+      position: absolute;
+      left: 50%;
+      top: 8px;
+      width: 2px;
+      height: calc(100% - 8px);
+      background: #3498db;
+      transform: translateX(-50%);
+    }
+
+    .bar-container {
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      height: 200px;
+      padding: 20px;
+    }
+
+    .bar {
+      flex: 1;
+      margin: 0 5px;
+      background: linear-gradient(to top, #3498db, #2980b9);
+      border-radius: 4px 4px 0 0;
+      position: relative;
+      min-height: 10px;
+      transition: all 0.3s ease;
+    }
+
+    .bar:hover {
+      opacity: 0.8;
+    }
+
+    .bar-label {
+      position: absolute;
+      bottom: -25px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 0.8rem;
+      color: #666;
+    }
+
+    .bar-value {
+      position: absolute;
+      top: -25px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: #2c3e50;
+    }
+
+    .calendar-section {
+      background: white;
+      border-radius: 15px;
+      padding: 25px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+      margin-bottom: 30px;
+    }
+
+    .calendar-title {
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin-bottom: 20px;
+      color: #2c3e50;
+      text-align: center;
+    }
+
+    .calendar {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 5px;
+    }
+
+    .calendar-day {
+      aspect-ratio: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 8px;
+      font-size: 0.9rem;
+      position: relative;
+    }
+
+    .calendar-header {
+      font-weight: 600;
+      color: #666;
+      background: #f8f9fa;
+    }
+
+    .calendar-day.today {
+      background: #3498db;
+      color: white;
+      font-weight: 600;
+    }
+
+    .calendar-day.has-reviews {
+      background: #d4edda;
+      color: #155724;
+    }
+
+    .calendar-day.has-reviews.today {
+      background: linear-gradient(45deg, #3498db, #d4edda);
+      color: white;
+    }
+
+    .review-count {
+      position: absolute;
+      top: 2px;
+      right: 2px;
+      background: #e74c3c;
+      color: white;
+      border-radius: 50%;
+      width: 16px;
+      height: 16px;
+      font-size: 0.7rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .leaderboard-section {
+      background: white;
+      border-radius: 15px;
+      padding: 25px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+      margin-bottom: 30px;
+    }
+
+    .leaderboard-title {
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin-bottom: 20px;
+      color: #2c3e50;
+      text-align: center;
+    }
+
+    .leaderboard-tabs {
+      display: flex;
+      margin-bottom: 20px;
+      background: #f8f9fa;
+      border-radius: 8px;
+      padding: 5px;
+    }
+
+    .tab-btn {
+      flex: 1;
+      padding: 10px;
+      border: none;
+      background: transparent;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: 600;
+      transition: all 0.3s ease;
+    }
+
+    .tab-btn.active {
+      background: white;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      color: #3498db;
+    }
+
+    .leaderboard-list {
+      max-height: 300px;
+      overflow-y: auto;
+    }
+
+    .leaderboard-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 15px;
+      border-bottom: 1px solid #ecf0f1;
+      transition: background 0.3s ease;
+    }
+
+    .leaderboard-item:hover {
+      background: #f8f9fa;
+    }
+
+    .leaderboard-item:last-child {
+      border-bottom: none;
+    }
+
+    .word-info {
+      flex: 1;
+    }
+
+    .word-english {
+      font-weight: 600;
+      color: #2c3e50;
+      margin-bottom: 5px;
+    }
+
+    .word-indonesian {
+      color: #666;
+      font-size: 0.9rem;
+    }
+
+    .word-stats {
+      text-align: right;
+    }
+
+    .stat-value {
+      font-size: 1.2rem;
+      font-weight: 600;
+      color: #3498db;
+    }
+
+    .stat-desc {
+      font-size: 0.8rem;
+      color: #666;
+    }
+
+    .export-section {
+      background: white;
+      border-radius: 15px;
+      padding: 25px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+      text-align: center;
+    }
+
+    .export-title {
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin-bottom: 20px;
+      color: #2c3e50;
+    }
+
+    .export-buttons {
+      display: flex;
+      justify-content: center;
+      gap: 15px;
+      flex-wrap: wrap;
+    }
+
+    .btn {
+      padding: 12px 25px;
+      border: none;
+      border-radius: 10px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      text-decoration: none;
+      display: inline-block;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #3498db, #2980b9);
+      color: white;
+      box-shadow: 0 4px 15px rgba(52, 152, 219, 0.3);
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(52, 152, 219, 0.4);
+    }
+
+    .btn-secondary {
+      background: linear-gradient(135deg, #95a5a6, #7f8c8d);
+      color: white;
+      box-shadow: 0 4px 15px rgba(149, 165, 166, 0.3);
+    }
+
+    .btn-secondary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(149, 165, 166, 0.4);
+    }
+
+    .btn-success {
+      background: linear-gradient(135deg, #27ae60, #229954);
+      color: white;
+      box-shadow: 0 4px 15px rgba(39, 174, 96, 0.3);
+    }
+
+    .btn-success:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(39, 174, 96, 0.4);
+    }
+
+    .loading {
+      text-align: center;
+      padding: 40px;
+      color: #666;
+    }
+
+    .error {
+      background: #f8d7da;
+      color: #721c24;
+      padding: 15px;
+      border-radius: 10px;
+      margin: 20px 0;
+      border: 1px solid #f5c6cb;
+    }
+
+    @media (max-width: 768px) {
+      .container {
+        padding: 10px;
+      }
+
+      .charts-section {
+        grid-template-columns: 1fr;
+      }
+
+      .stats-overview {
+        grid-template-columns: repeat(2, 1fr);
+      }
+
+      .calendar {
+        font-size: 0.8rem;
+      }
+
+      .export-buttons {
+        flex-direction: column;
+        align-items: center;
+      }
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .fade-in {
+      animation: fadeIn 0.6s ease forwards;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header class="header">
+      <h1>Statistik Pembelajaran</h1>
+      <p>Analisis dan visualisasi progress pembelajaran Anda</p>
+    </header>
+
+    <div id="error-message" class="error" style="display: none;"></div>
+
+    <div id="loading" class="loading">
+      <p>Memuat data statistik...</p>
+    </div>
+
+    <div id="stats-content" style="display: none;">
+      <section class="stats-overview">
+        <div class="stat-card retention fade-in">
+          <div class="stat-number" id="retention-rate">-</div>
+          <div class="stat-label">Retention Rate</div>
+        </div>
+        <div class="stat-card interval fade-in">
+          <div class="stat-number" id="avg-interval">-</div>
+          <div class="stat-label">Avg Interval (hari)</div>
+        </div>
+        <div class="stat-card mastery fade-in">
+          <div class="stat-number" id="mastery-prediction">-</div>
+          <div class="stat-label">Prediksi Mastery</div>
+        </div>
+        <div class="stat-card streak fade-in">
+          <div class="stat-number" id="current-streak">-</div>
+          <div class="stat-label">Streak Hari</div>
+        </div>
+      </section>
+
+      <section class="charts-section">
+        <div class="chart-card fade-in">
+          <h3 class="chart-title">Retensi vs Waktu</h3>
+          <div class="line-chart">
+            <div class="chart-grid">
+              <div class="grid-line"></div>
+              <div class="grid-line"></div>
+              <div class="grid-line"></div>
+              <div class="grid-line"></div>
+              <div class="grid-line"></div>
+            </div>
+            <div class="line-points" id="retention-chart">
+              <!-- Points will be added by JavaScript -->
+            </div>
+          </div>
+          <div style="text-align: center; color: #666; font-size: 0.9rem;">
+            Hari ke-1 hingga Hari ke-30
+          </div>
+        </div>
+
+        <div class="chart-card fade-in">
+          <h3 class="chart-title">Distribusi Skor Rating</h3>
+          <div class="bar-chart">
+            <div class="bar-container" id="score-distribution">
+              <!-- Bars will be added by JavaScript -->
+            </div>
+          </div>
+          <div style="text-align: center; color: #666; font-size: 0.9rem;">
+            Rating 1 (Sangat Sulit) hingga 5 (Sangat Mudah)
+          </div>
+        </div>
+      </section>
+
+      <section class="calendar-section fade-in">
+        <h3 class="calendar-title">Jadwal Review 30 Hari Terakhir</h3>
+        <div class="calendar" id="review-calendar">
+          <!-- Calendar will be generated by JavaScript -->
+        </div>
+      </section>
+
+      <section class="leaderboard-section fade-in">
+        <h3 class="leaderboard-title">Leaderboard Kata</h3>
+        <div class="leaderboard-tabs">
+          <button class="tab-btn active" onclick="showLeaderboard('hardest')">Kata Paling Sulit</button>
+          <button class="tab-btn" onclick="showLeaderboard('easiest')">Kata Paling Mudah</button>
+        </div>
+        <div class="leaderboard-list" id="leaderboard-list">
+          <!-- Leaderboard items will be added by JavaScript -->
+        </div>
+      </section>
+
+      <section class="export-section fade-in">
+        <h3 class="export-title">Export Data</h3>
+        <div class="export-buttons">
+          <button class="btn btn-primary" onclick="exportToCSV()">Export ke CSV</button>
+          <button class="btn btn-secondary" onclick="printReport()">Print Report</button>
+          <a href="index.html" class="btn btn-success">Kembali ke Dashboard</a>
+        </div>
+      </section>
+    </div>
+  </div>
+
+  <script>
+    const API_BASE = 'http://127.0.0.1:5000';
+
+    let statsData = {};
+    let wordsData = [];
+
+    async function fetchStats() {
+      try {
+        const response = await fetch(`${API_BASE}/api/stats`);
+        if (!response.ok) throw new Error('Gagal mengambil data statistik');
+        return await response.json();
+      } catch (error) {
+        throw new Error(`Error fetching stats: ${error.message}`);
+      }
+    }
+
+    async function fetchWords() {
+      try {
+        const response = await fetch(`${API_BASE}/api/words`);
+        if (!response.ok) throw new Error('Gagal mengambil data kata');
+        return await response.json();
+      } catch (error) {
+        throw new Error(`Error fetching words: ${error.message}`);
+      }
+    }
+
+    function generateMockStats() {
+      return {
+        total_words: 25,
+        reviewed_words: 18,
+        avg_score: 3.2,
+        due_count: 7,
+        retention_rate: 78,
+        avg_interval: 4.2,
+        mastery_prediction: 85,
+        current_streak: 12
+      };
+    }
+
+    function generateMockWords() {
+      const words = [
+        { english: 'apple', indonesian: 'apel', difficulty: 1, avg_rating: 4.5, review_count: 8 },
+        { english: 'book', indonesian: 'buku', difficulty: 1, avg_rating: 4.2, review_count: 6 },
+        { english: 'run', indonesian: 'berlari', difficulty: 2, avg_rating: 3.8, review_count: 5 },
+        { english: 'happy', indonesian: 'bahagia', difficulty: 1, avg_rating: 4.7, review_count: 9 },
+        { english: 'teacher', indonesian: 'guru', difficulty: 2, avg_rating: 3.5, review_count: 4 },
+        { english: 'beautiful', indonesian: 'cantik', difficulty: 3, avg_rating: 2.8, review_count: 3 },
+        { english: 'difficult', indonesian: 'sulit', difficulty: 3, avg_rating: 2.5, review_count: 2 },
+        { english: 'important', indonesian: 'penting', difficulty: 2, avg_rating: 3.2, review_count: 4 }
+      ];
+      return words;
+    }
+
+    function updateOverviewStats(stats) {
+      document.getElementById('retention-rate').textContent = `${stats.retention_rate || 0}%`;
+      document.getElementById('avg-interval').textContent = stats.avg_interval || 0;
+      document.getElementById('mastery-prediction').textContent = `${stats.mastery_prediction || 0}%`;
+      document.getElementById('current-streak').textContent = stats.current_streak || 0;
+    }
+
+    function renderRetentionChart() {
+      const chartContainer = document.getElementById('retention-chart');
+      const retentionData = [65, 72, 68, 75, 78, 82, 79, 85, 88, 86, 90, 87, 89, 91, 88, 92, 90, 93, 91, 94, 92, 95, 93, 94, 92, 96, 94, 95, 93, 97];
+
+      chartContainer.innerHTML = retentionData.map((value, index) => {
+        const height = (value / 100) * 100;
+        return `<div class="line-point" style="height: ${height}%; bottom: 0;" title="Hari ${index + 1}: ${value}%"></div>`;
+      }).join('');
+    }
+
+    function renderScoreDistribution() {
+      const container = document.getElementById('score-distribution');
+      const scoreData = [2, 3, 8, 15, 22]; // Ratings 1-5
+
+      container.innerHTML = scoreData.map((count, index) => {
+        const height = (count / Math.max(...scoreData)) * 100;
+        const rating = index + 1;
+        const emojis = ['😵', '😟', '😐', '😊', '😄'];
+
+        return `
+          <div class="bar" style="height: ${height}%;" title="Rating ${rating}: ${count} kali">
+            <div class="bar-value">${count}</div>
+            <div class="bar-label">${emojis[index]}</div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function renderCalendar() {
+      const calendarContainer = document.getElementById('review-calendar');
+      const daysOfWeek = ['Min', 'Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab'];
+
+      // Generate calendar header
+      let calendarHTML = daysOfWeek.map(day => `<div class="calendar-day calendar-header">${day}</div>`).join('');
+
+      // Generate 30 days (simplified - just showing last 30 days)
+      const today = new Date();
+      for (let i = 29; i >= 0; i--) {
+        const date = new Date(today);
+        date.setDate(today.getDate() - i);
+
+        const dayOfMonth = date.getDate();
+        const isToday = date.toDateString() === today.toDateString();
+
+        // Mock review data - some days have reviews
+        const hasReviews = Math.random() > 0.6;
+        const reviewCount = hasReviews ? Math.floor(Math.random() * 5) + 1 : 0;
+
+        let dayClass = 'calendar-day';
+        if (isToday) dayClass += ' today';
+        if (hasReviews) dayClass += ' has-reviews';
+
+        calendarHTML += `
+          <div class="${dayClass}" title="${date.toLocaleDateString('id-ID')}">
+            ${dayOfMonth}
+            ${hasReviews ? `<div class="review-count">${reviewCount}</div>` : ''}
+          </div>
+        `;
+      }
+
+      calendarContainer.innerHTML = calendarHTML;
+    }
+
+    function renderLeaderboard(type) {
+      const container = document.getElementById('leaderboard-list');
+
+      // Sort words based on type
+      let sortedWords = [...wordsData];
+      if (type === 'hardest') {
+        sortedWords.sort((a, b) => a.avg_rating - b.avg_rating);
+      } else {
+        sortedWords.sort((a, b) => b.avg_rating - a.avg_rating);
+      }
+
+      container.innerHTML = sortedWords.slice(0, 8).map((word, index) => {
+        const difficultyText = word.difficulty === 1 ? 'Mudah' : word.difficulty === 2 ? 'Sedang' : 'Sulit';
+        const difficultyClass = word.difficulty === 1 ? 'easy' : word.difficulty === 2 ? 'medium' : 'hard';
+
+        return `
+          <div class="leaderboard-item">
+            <div class="word-info">
+              <div class="word-english">${word.english}</div>
+              <div class="word-indonesian">${word.indonesian}</div>
+            </div>
+            <div class="word-stats">
+              <div class="stat-value">${word.avg_rating.toFixed(1)}</div>
+              <div class="stat-desc">Avg Rating</div>
+              <div class="stat-desc" style="margin-top: 5px;">${word.review_count} reviews</div>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function showLeaderboard(type) {
+      // Update tab buttons
+      document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+      event.target.classList.add('active');
+
+      renderLeaderboard(type);
+    }
+
+    function exportToCSV() {
+      // Create CSV content
+      let csvContent = 'English,Indonesian,Difficulty,Avg Rating,Review Count\n';
+
+      wordsData.forEach(word => {
+        csvContent += `${word.english},${word.indonesian},${word.difficulty},${word.avg_rating},${word.review_count}\n`;
+      });
+
+      // Create and download file
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const link = document.createElement('a');
+      const url = URL.createObjectURL(blob);
+      link.setAttribute('href', url);
+      link.setAttribute('download', 'srs_statistics.csv');
+      link.style.visibility = 'hidden';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+
+      alert('Data berhasil diexport ke CSV!');
+    }
+
+    function printReport() {
+      const printWindow = window.open('', '_blank');
+      printWindow.document.write(`
+        <html>
+          <head>
+            <title>Laporan Statistik SRS</title>
+            <style>
+              body { font-family: Arial, sans-serif; margin: 20px; }
+              h1 { color: #3498db; }
+              .stats-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; margin: 20px 0; }
+              .stat-item { padding: 15px; border: 1px solid #ddd; border-radius: 8px; }
+              .stat-label { font-weight: bold; color: #666; }
+              .stat-value { font-size: 1.5rem; color: #3498db; }
+              table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+              th, td { padding: 10px; text-align: left; border-bottom: 1px solid #ddd; }
+              th { background: #f8f9fa; }
+            </style>
+          </head>
+          <body>
+            <h1>Laporan Statistik SRS</h1>
+            <p><strong>Tanggal:</strong> ${new Date().toLocaleDateString('id-ID')}</p>
+
+            <div class="stats-grid">
+              <div class="stat-item">
+                <div class="stat-label">Retention Rate</div>
+                <div class="stat-value">${statsData.retention_rate}%</div>
+              </div>
+              <div class="stat-item">
+                <div class="stat-label">Average Interval</div>
+                <div class="stat-value">${statsData.avg_interval} hari</div>
+              </div>
+              <div class="stat-item">
+                <div class="stat-label">Prediksi Mastery</div>
+                <div class="stat-value">${statsData.mastery_prediction}%</div>
+              </div>
+              <div class="stat-item">
+                <div class="stat-label">Current Streak</div>
+                <div class="stat-value">${statsData.current_streak} hari</div>
+              </div>
+            </div>
+
+            <h2>Data Kata</h2>
+            <table>
+              <thead>
+                <tr>
+                  <th>English</th>
+                  <th>Indonesian</th>
+                  <th>Difficulty</th>
+                  <th>Avg Rating</th>
+                  <th>Review Count</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${wordsData.map(word => `
+                  <tr>
+                    <td>${word.english}</td>
+                    <td>${word.indonesian}</td>
+                    <td>${word.difficulty === 1 ? 'Mudah' : word.difficulty === 2 ? 'Sedang' : 'Sulit'}</td>
+                    <td>${word.avg_rating.toFixed(1)}</td>
+                    <td>${word.review_count}</td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+          </body>
+        </html>
+      `);
+      printWindow.document.close();
+      printWindow.print();
+    }
+
+    function showError(message) {
+      const errorDiv = document.getElementById('error-message');
+      errorDiv.textContent = message;
+      errorDiv.style.display = 'block';
+    }
+
+    async function loadStatsPage() {
+      try {
+        document.getElementById('loading').style.display = 'block';
+        document.getElementById('error-message').style.display = 'none';
+
+        // Try to fetch real data, fallback to mock data
+        try {
+          statsData = await fetchStats();
+          wordsData = await fetchWords();
+        } catch (error) {
+          console.warn('Using mock data due to API error:', error);
+          statsData = generateMockStats();
+          wordsData = generateMockWords();
+        }
+
+        updateOverviewStats(statsData);
+        renderRetentionChart();
+        renderScoreDistribution();
+        renderCalendar();
+        renderLeaderboard('hardest');
+
+        document.getElementById('loading').style.display = 'none';
+        document.getElementById('stats-content').style.display = 'block';
+
+      } catch (error) {
+        document.getElementById('loading').style.display = 'none';
+        showError(`Gagal memuat halaman statistik: ${error.message}`);
+        console.error('Stats page error:', error);
+      }
+    }
+
+    // Load the stats page when it loads
+    document.addEventListener('DOMContentLoaded', loadStatsPage);
+  </script>
+</body>
+</html>

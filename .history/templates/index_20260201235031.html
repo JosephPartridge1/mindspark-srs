@@ -1,0 +1,91 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vocab Trainer • SRS</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <style>
+        /* Inline critical CSS untuk mencegah FOUC */
+        body { margin: 0; padding: 20px; background: #0f0f1a; color: #e0e0e0; font-family: sans-serif; }
+        .container { max-width: 800px; margin: 0 auto; }
+        .header { text-align: center; margin-bottom: 40px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- HEADER MINIMAL -->
+        <header class="header">
+            <h1>Vocab Trainer</h1>
+            <p class="subtitle">Spaced Repetition System</p>
+        </header>
+
+        <!-- MAIN CONTENT - HANYA INI YANG ADA -->
+        <main class="main-content">
+            <!-- PROGRESS INDICATOR -->
+            <div class="progress-container">
+                <div class="progress-label">Session Progress</div>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progress-fill"></div>
+                </div>
+                <div class="progress-text" id="progress-text">0/10</div>
+            </div>
+
+            <!-- CURRENT WORD DISPLAY -->
+            <div class="word-card">
+                <div class="word-main" id="current-word">apple</div>
+                <div class="word-meta">
+                    <span class="pos-tag" id="part-of-speech">noun</span>
+                    <div class="example" id="example-sentence">I eat an apple every day.</div>
+                </div>
+            </div>
+
+            <!-- INPUT AREA -->
+            <div class="input-area">
+                <div class="input-group">
+                    <input
+                        type="text"
+                        id="answer-input"
+                        placeholder="Type the Indonesian translation..."
+                        autocomplete="off"
+                        autofocus
+                        aria-label="Translation input"
+                    >
+                    <button id="submit-btn" class="primary-btn">
+                        <span>Submit</span>
+                        <span class="icon">↵</span>
+                    </button>
+                </div>
+                <div class="input-hint">
+                    Press <kbd>Enter</kbd> to submit • Case-insensitive
+                </div>
+            </div>
+
+            <!-- FEEDBACK AREA -->
+            <div class="feedback-area" id="feedback-area">
+                <!-- Diisi JavaScript -->
+            </div>
+
+            <!-- SESSION INFO MINIMAL -->
+            <div class="session-info">
+                <div class="info-item">
+                    <span class="info-label">Due:</span>
+                    <span id="due-count">5</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Streak:</span>
+                    <span id="current-streak">0</span>
+                </div>
+            </div>
+        </main>
+
+        <!-- FOOTER MINIMAL -->
+        <footer class="footer">
+            <small>Cyber SRS • Focus on learning</small>
+        </footer>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+</body>
+</html>

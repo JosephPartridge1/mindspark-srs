@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cyber SRS Learning Hub</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <!-- Particle Background -->
+    <div class="particles" id="particles"></div>
+
+    <div class="container">
+        <!-- HEADER -->
+        <header class="header-section">
+            <h1>Cyber SRS Learning Hub</h1>
+            <div class="subtitle">Duolingo-style Vocabulary Trainer</div>
+        </header>
+
+        <!-- PROGRESS BAR -->
+        <div class="progress-section">
+            <div class="progress-container">
+                <div class="progress-bar" id="progress-bar"></div>
+                <div class="progress-text" id="progress-text">0/0</div>
+            </div>
+        </div>
+
+        <!-- CURRENT WORD CARD -->
+        <div class="card-section">
+            <div class="word-card">
+                <div class="word-english" id="current-word">loading...</div>
+                <div class="word-details">
+                    <span class="part-of-speech" id="part-of-speech">noun</span>
+                    <div class="example-sentence" id="example-sentence">Loading example...</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- INPUT AREA -->
+        <div class="input-section">
+            <div class="input-container">
+                <input
+                    type="text"
+                    id="answer-input"
+                    placeholder="Ketik terjemahan dalam Bahasa Indonesia..."
+                    autocomplete="off"
+                    autofocus
+                >
+                <button id="submit-btn">Submit (Enter)</button>
+            </div>
+        </div>
+
+        <!-- FEEDBACK MESSAGE -->
+        <div class="feedback-section">
+            <div class="feedback" id="feedback"></div>
+        </div>
+
+        <!-- SESSION INFO -->
+        <div class="info-section">
+            <div class="session-info">
+                <div class="info-item">
+                    <span class="info-label">Words due:</span>
+                    <span class="info-value" id="due-count">0</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Current streak:</span>
+                    <span class="info-value" id="current-streak">0</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+</body>
+</html>

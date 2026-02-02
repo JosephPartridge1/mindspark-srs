@@ -1,0 +1,573 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Belajar Kosakata - SRS System</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      color: #333;
+      padding: 20px;
+    }
+
+    .container {
+      max-width: 600px;
+      margin: 0 auto;
+    }
+
+    .header {
+      text-align: center;
+      margin-bottom: 30px;
+      color: white;
+    }
+
+    .header h1 {
+      font-size: 2rem;
+      margin-bottom: 10px;
+      text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+    }
+
+    .progress-container {
+      background: white;
+      border-radius: 15px;
+      padding: 20px;
+      margin-bottom: 30px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+    }
+
+    .progress-bar {
+      width: 100%;
+      height: 20px;
+      background: #ecf0f1;
+      border-radius: 10px;
+      overflow: hidden;
+      margin-bottom: 10px;
+    }
+
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #3498db, #27ae60);
+      border-radius: 10px;
+      transition: width 0.5s ease;
+      width: 0%;
+    }
+
+    .progress-text {
+      text-align: center;
+      color: #666;
+      font-size: 0.9rem;
+    }
+
+    .card {
+      background: white;
+      border-radius: 20px;
+      padding: 40px;
+      box-shadow: 0 15px 40px rgba(0,0,0,0.15);
+      text-align: center;
+      margin-bottom: 30px;
+      min-height: 300px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      transition: transform 0.3s ease;
+    }
+
+    .card:hover {
+      transform: translateY(-5px);
+    }
+
+    .word {
+      font-size: 3rem;
+      font-weight: bold;
+      color: #2c3e50;
+      margin-bottom: 20px;
+      text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
+    }
+
+    .meaning {
+      font-size: 1.5rem;
+      color: #27ae60;
+      margin: 20px 0;
+      opacity: 0;
+      transition: opacity 0.5s ease;
+    }
+
+    .meaning.show {
+      opacity: 1;
+    }
+
+    .btn {
+      padding: 12px 25px;
+      border: none;
+      border-radius: 10px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      margin: 5px;
+      min-width: 120px;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #3498db, #2980b9);
+      color: white;
+      box-shadow: 0 4px 15px rgba(52, 152, 219, 0.3);
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(52, 152, 219, 0.4);
+    }
+
+    .btn-success {
+      background: linear-gradient(135deg, #27ae60, #229954);
+      color: white;
+      box-shadow: 0 4px 15px rgba(39, 174, 96, 0.3);
+    }
+
+    .btn-success:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(39, 174, 96, 0.4);
+    }
+
+    .rating-container {
+      margin: 30px 0;
+      opacity: 0;
+      transition: opacity 0.5s ease;
+    }
+
+    .rating-container.show {
+      opacity: 1;
+    }
+
+    .rating-buttons {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-bottom: 20px;
+    }
+
+    .rating-btn {
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      border: 3px solid #ddd;
+      background: white;
+      font-size: 1.5rem;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .rating-btn:hover {
+      transform: scale(1.1);
+      border-color: #3498db;
+    }
+
+    .rating-btn.selected {
+      background: #3498db;
+      color: white;
+      border-color: #3498db;
+      transform: scale(1.1);
+    }
+
+    .rating-labels {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.8rem;
+      color: #666;
+      margin-top: 10px;
+    }
+
+    .confirmation {
+      background: #d4edda;
+      color: #155724;
+      padding: 15px;
+      border-radius: 10px;
+      margin: 20px 0;
+      border: 1px solid #c3e6cb;
+      opacity: 0;
+      transition: opacity 0.5s ease;
+    }
+
+    .confirmation.show {
+      opacity: 1;
+    }
+
+    .loading {
+      text-align: center;
+      padding: 40px;
+      color: #666;
+    }
+
+    .error {
+      background: #f8d7da;
+      color: #721c24;
+      padding: 15px;
+      border-radius: 10px;
+      margin: 20px 0;
+      border: 1px solid #f5c6cb;
+    }
+
+    .session-complete {
+      text-align: center;
+      background: white;
+      border-radius: 20px;
+      padding: 40px;
+      box-shadow: 0 15px 40px rgba(0,0,0,0.15);
+      margin-top: 30px;
+    }
+
+    .session-complete h2 {
+      color: #27ae60;
+      margin-bottom: 20px;
+    }
+
+    .session-stats {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+      gap: 15px;
+      margin: 20px 0;
+    }
+
+    .stat-item {
+      background: #f8f9fa;
+      padding: 10px;
+      border-radius: 8px;
+    }
+
+    .stat-number {
+      font-size: 1.5rem;
+      font-weight: bold;
+      color: #3498db;
+    }
+
+    .stat-label {
+      font-size: 0.8rem;
+      color: #666;
+    }
+
+    @media (max-width: 768px) {
+      .container {
+        padding: 10px;
+      }
+
+      .card {
+        padding: 30px 20px;
+        min-height: 250px;
+      }
+
+      .word {
+        font-size: 2.5rem;
+      }
+
+      .rating-buttons {
+        gap: 5px;
+      }
+
+      .rating-btn {
+        width: 45px;
+        height: 45px;
+        font-size: 1.3rem;
+      }
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .fade-in {
+      animation: fadeIn 0.6s ease forwards;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header class="header">
+      <h1>Belajar Kosakata</h1>
+      <p>Sistem Spaced Repetition untuk bahasa Inggris</p>
+    </header>
+
+    <div id="progress-container" class="progress-container fade-in">
+      <div class="progress-bar">
+        <div class="progress-fill" id="progress-fill"></div>
+      </div>
+      <div class="progress-text" id="progress-text">Memuat sesi belajar...</div>
+    </div>
+
+    <div id="loading" class="loading">
+      <p>Mempersiapkan kata-kata untuk dipelajari...</p>
+    </div>
+
+    <div id="error-message" class="error" style="display: none;"></div>
+
+    <div id="card-container" style="display: none;">
+      <div class="card fade-in">
+        <div class="word" id="current-word">Loading...</div>
+
+        <div class="meaning" id="current-meaning">Klik "Tampilkan Arti" untuk melihat terjemahan</div>
+
+        <div id="show-meaning-btn">
+          <button class="btn btn-primary" onclick="showMeaning()">Tampilkan Arti</button>
+        </div>
+
+        <div class="rating-container" id="rating-container">
+          <p style="margin-bottom: 15px; color: #666;">Seberapa mudah Anda mengingat kata ini?</p>
+          <div class="rating-buttons">
+            <button class="rating-btn" onclick="rateWord(1)">😵</button>
+            <button class="rating-btn" onclick="rateWord(2)">😟</button>
+            <button class="rating-btn" onclick="rateWord(3)">😐</button>
+            <button class="rating-btn" onclick="rateWord(4)">😊</button>
+            <button class="rating-btn" onclick="rateWord(5)">😄</button>
+          </div>
+          <div class="rating-labels">
+            <span>Sangat Sulit</span>
+            <span>Sangat Mudah</span>
+          </div>
+        </div>
+
+        <div class="confirmation" id="confirmation" style="display: none;">
+          <p id="confirmation-text"></p>
+        </div>
+      </div>
+
+      <div style="text-align: center;">
+        <button class="btn btn-success" id="next-btn" onclick="nextWord()" style="display: none;">Lanjut ke Kata Berikutnya</button>
+        <button class="btn btn-primary" onclick="goToDashboard()" style="margin-left: 10px;">Kembali ke Dashboard</button>
+      </div>
+    </div>
+
+    <div id="session-complete" class="session-complete" style="display: none;">
+      <h2>🎉 Sesi Belajar Selesai!</h2>
+      <p>Selamat! Anda telah menyelesaikan semua kata yang perlu dipelajari hari ini.</p>
+
+      <div class="session-stats">
+        <div class="stat-item">
+          <div class="stat-number" id="session-words">0</div>
+          <div class="stat-label">Kata Dipelajari</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-number" id="session-time">0</div>
+          <div class="stat-label">Menit</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-number" id="session-avg">0</div>
+          <div class="stat-label">Rata-rata Rating</div>
+        </div>
+      </div>
+
+      <button class="btn btn-primary" onclick="goToDashboard()">Kembali ke Dashboard</button>
+    </div>
+  </div>
+
+  <script>
+    const API_BASE = 'http://127.0.0.1:5000';
+
+    let currentWords = [];
+    let currentIndex = 0;
+    let sessionStartTime = Date.now();
+    let sessionRatings = [];
+    let selectedRating = null;
+
+    async function fetchDueWords() {
+      try {
+        const response = await fetch(`${API_BASE}/session/start?user_id=1&size=10`);
+        if (!response.ok) throw new Error('Gagal mengambil kata untuk dipelajari');
+        return await response.json();
+      } catch (error) {
+        throw new Error(`Error fetching words: ${error.message}`);
+      }
+    }
+
+    async function submitAnswer(word, rating) {
+      try {
+        const response = await fetch(`${API_BASE}/answer`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            word: word,
+            quality: rating.toString()
+          })
+        });
+        if (!response.ok) throw new Error('Gagal mengirim jawaban');
+        return await response.json();
+      } catch (error) {
+        throw new Error(`Error submitting answer: ${error.message}`);
+      }
+    }
+
+    function updateProgress() {
+      const progress = ((currentIndex + 1) / currentWords.length) * 100;
+      document.getElementById('progress-fill').style.width = `${progress}%`;
+      document.getElementById('progress-text').textContent =
+        `Kata ${currentIndex + 1} dari ${currentWords.length} (${progress.toFixed(0)}% selesai)`;
+    }
+
+    function showWord(word) {
+      document.getElementById('current-word').textContent = word;
+      document.getElementById('current-meaning').textContent = 'Klik "Tampilkan Arti" untuk melihat terjemahan';
+      document.getElementById('current-meaning').classList.remove('show');
+      document.getElementById('rating-container').classList.remove('show');
+      document.getElementById('confirmation').style.display = 'none';
+      document.getElementById('next-btn').style.display = 'none';
+      document.getElementById('show-meaning-btn').style.display = 'block';
+      selectedRating = null;
+
+      // Reset rating buttons
+      document.querySelectorAll('.rating-btn').forEach(btn => {
+        btn.classList.remove('selected');
+      });
+    }
+
+    function showMeaning() {
+      // In a real SRS system, we'd fetch the meaning from the database
+      // For now, we'll simulate with some common words
+      const word = document.getElementById('current-word').textContent.toLowerCase();
+      const meanings = {
+        'apple': 'apel',
+        'book': 'buku',
+        'run': 'berlari',
+        'happy': 'bahagia',
+        'teacher': 'guru',
+        'water': 'air',
+        'sun': 'matahari',
+        'moon': 'bulan',
+        'cat': 'kucing',
+        'dog': 'anjing'
+      };
+
+      const meaning = meanings[word] || 'arti tidak ditemukan';
+      document.getElementById('current-meaning').textContent = meaning;
+      document.getElementById('current-meaning').classList.add('show');
+      document.getElementById('show-meaning-btn').style.display = 'none';
+      document.getElementById('rating-container').classList.add('show');
+    }
+
+    function rateWord(rating) {
+      selectedRating = rating;
+
+      // Update UI
+      document.querySelectorAll('.rating-btn').forEach((btn, index) => {
+        if (index + 1 === rating) {
+          btn.classList.add('selected');
+        } else {
+          btn.classList.remove('selected');
+        }
+      });
+
+      // Show confirmation
+      const confirmations = {
+        1: 'Kata ini akan diulang dalam 1 hari',
+        2: 'Kata ini akan diulang dalam 1 hari',
+        3: 'Kata ini akan diulang dalam 3 hari',
+        4: 'Kata ini akan diulang dalam 1 minggu',
+        5: 'Kata ini akan diulang dalam 2 minggu'
+      };
+
+      document.getElementById('confirmation-text').textContent = confirmations[rating];
+      document.getElementById('confirmation').style.display = 'block';
+      document.getElementById('next-btn').style.display = 'inline-block';
+    }
+
+    async function nextWord() {
+      if (!selectedRating) {
+        alert('Silakan pilih rating terlebih dahulu!');
+        return;
+      }
+
+      // Submit the answer
+      try {
+        const currentWord = document.getElementById('current-word').textContent;
+        await submitAnswer(currentWord, selectedRating);
+        sessionRatings.push(selectedRating);
+      } catch (error) {
+        console.error('Error submitting answer:', error);
+        // Continue anyway for demo purposes
+      }
+
+      currentIndex++;
+
+      if (currentIndex < currentWords.length) {
+        showWord(currentWords[currentIndex]);
+        updateProgress();
+      } else {
+        showSessionComplete();
+      }
+    }
+
+    function showSessionComplete() {
+      document.getElementById('card-container').style.display = 'none';
+      document.getElementById('progress-container').style.display = 'none';
+
+      const sessionTime = Math.round((Date.now() - sessionStartTime) / 60000); // minutes
+      const avgRating = sessionRatings.length > 0 ?
+        (sessionRatings.reduce((a, b) => a + b, 0) / sessionRatings.length).toFixed(1) : 0;
+
+      document.getElementById('session-words').textContent = currentWords.length;
+      document.getElementById('session-time').textContent = sessionTime;
+      document.getElementById('session-avg').textContent = avgRating;
+
+      document.getElementById('session-complete').style.display = 'block';
+    }
+
+    function goToDashboard() {
+      window.location.href = 'index.html';
+    }
+
+    function showError(message) {
+      const errorDiv = document.getElementById('error-message');
+      errorDiv.textContent = message;
+      errorDiv.style.display = 'block';
+    }
+
+    async function startSession() {
+      try {
+        document.getElementById('loading').style.display = 'block';
+        document.getElementById('error-message').style.display = 'none';
+
+        currentWords = await fetchDueWords();
+
+        if (currentWords.length === 0) {
+          // No words due, show completion message
+          showSessionComplete();
+          return;
+        }
+
+        document.getElementById('loading').style.display = 'none';
+        document.getElementById('card-container').style.display = 'block';
+        document.getElementById('progress-container').style.display = 'block';
+
+        currentIndex = 0;
+        sessionStartTime = Date.now();
+        sessionRatings = [];
+
+        showWord(currentWords[0]);
+        updateProgress();
+
+      } catch (error) {
+        document.getElementById('loading').style.display = 'none';
+        showError(`Gagal memuat sesi belajar: ${error.message}`);
+        console.error('Session start error:', error);
+      }
+    }
+
+    // Start the session when page loads
+    document.addEventListener('DOMContentLoaded', startSession);
+  </script>
+</body>
+</html>

@@ -1,0 +1,829 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🚀 CYBER SRS LEARNING HUB</title>
+    <style>
+        /* Cyberpunk Color Palette */
+        :root {
+            --space-navy: #0F172A;
+            --dark-slate: #1E293B;
+            --neon-indigo: #6366F1;
+            --electric-purple: #8B5CF6;
+            --cyber-cyan: #06B6D4;
+            --matrix-green: #10B981;
+            --hologram-amber: #F59E0B;
+            --laser-red: #EF4444;
+            --glass-bg: rgba(255, 255, 255, 0.1);
+            --glass-border: rgba(255, 255, 255, 0.2);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Courier New', monospace;
+            background: linear-gradient(135deg, var(--space-navy) 0%, var(--dark-slate) 100%);
+            color: #E2E8F0;
+            overflow: hidden;
+            height: 100vh;
+            width: 100vw;
+        }
+
+        /* Particle Background */
+        .particles {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        .particle {
+            position: absolute;
+            background: var(--neon-indigo);
+            border-radius: 50%;
+            opacity: 0.6;
+            animation: float 6s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px) rotate(0deg); opacity: 0.6; }
+            50% { transform: translateY(-20px) rotate(180deg); opacity: 0.3; }
+        }
+
+        /* Header */
+        .header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 60px;
+            background: rgba(15, 23, 42, 0.9);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid var(--neon-indigo);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 20px;
+            z-index: 1000;
+        }
+
+        .header h1 {
+            color: var(--cyber-cyan);
+            font-size: 20px;
+            text-shadow: 0 0 10px var(--cyber-cyan);
+        }
+
+        .status-bar {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+
+        .status-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 12px;
+        }
+
+        .status-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: var(--matrix-green);
+            box-shadow: 0 0 6px var(--matrix-green);
+        }
+
+        .status-dot.disconnected {
+            background: var(--laser-red);
+            box-shadow: 0 0 6px var(--laser-red);
+        }
+
+        /* Main Layout - Full Landscape */
+        .main {
+            display: grid;
+            grid-template-columns: 250px 1fr;
+            height: 100vh;
+            padding-top: 60px;
+        }
+
+        /* Sidebar Navigation */
+        .sidebar {
+            background: rgba(15, 23, 42, 0.95);
+            backdrop-filter: blur(10px);
+            border-right: 1px solid var(--neon-indigo);
+            padding: 20px;
+            overflow-y: auto;
+        }
+
+        .nav-item {
+            display: block;
+            padding: 12px 15px;
+            margin: 5px 0;
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 8px;
+            color: #E2E8F0;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .nav-item:hover, .nav-item.active {
+            background: var(--neon-indigo);
+            color: white;
+            box-shadow: 0 0 15px var(--neon-indigo);
+            transform: translateX(5px);
+        }
+
+        .nav-item::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: left 0.5s;
+        }
+
+        .nav-item:hover::before {
+            left: 100%;
+        }
+
+        /* Content Area */
+        .content {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 20px;
+            padding: 20px;
+            overflow: hidden;
+        }
+
+        /* Dashboard Panel */
+        .dashboard {
+            background: var(--glass-bg);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--glass-border);
+            border-radius: 15px;
+            padding: 20px;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+        }
+
+        .stat-card {
+            background: rgba(0,0,0,0.3);
+            border: 1px solid var(--glass-border);
+            border-radius: 10px;
+            padding: 15px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, var(--neon-indigo), var(--electric-purple));
+        }
+
+        .stat-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: var(--cyber-cyan);
+            margin-bottom: 5px;
+            text-shadow: 0 0 10px var(--cyber-cyan);
+        }
+
+        .stat-label {
+            font-size: 12px;
+            color: #94A3B8;
+        }
+
+        /* Learning Panel */
+        .learning-panel {
+            background: var(--glass-bg);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--glass-border);
+            border-radius: 15px;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+
+        /* Vocabulary Card */
+        .vocab-card {
+            width: 100%;
+            max-width: 400px;
+            height: 250px;
+            perspective: 1000px;
+            margin-bottom: 20px;
+        }
+
+        .card-inner {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            text-align: center;
+            transition: transform 0.8s;
+            transform-style: preserve-3d;
+        }
+
+        .vocab-card.flipped .card-inner {
+            transform: rotateY(180deg);
+        }
+
+        .card-face {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden;
+            border-radius: 15px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+
+        .card-front {
+            background: linear-gradient(135deg, var(--neon-indigo), var(--electric-purple));
+            color: white;
+        }
+
+        .card-back {
+            background: linear-gradient(135deg, var(--matrix-green), var(--cyber-cyan));
+            color: white;
+            transform: rotateY(180deg);
+        }
+
+        .card-word {
+            font-size: 32px;
+            font-weight: bold;
+            margin-bottom: 10px;
+            text-shadow: 0 0 15px rgba(255,255,255,0.5);
+        }
+
+        .card-meaning {
+            font-size: 20px;
+            opacity: 0.9;
+        }
+
+        .card-example {
+            font-size: 14px;
+            opacity: 0.7;
+            margin-top: 10px;
+            font-style: italic;
+        }
+
+        /* Rating Buttons */
+        .rating-buttons {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+            width: 100%;
+            max-width: 400px;
+            margin: 20px 0;
+        }
+
+        .rating-btn {
+            padding: 12px;
+            border: 2px solid var(--neon-indigo);
+            background: rgba(99, 102, 241, 0.1);
+            color: var(--neon-indigo);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: bold;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .rating-btn:hover {
+            background: var(--neon-indigo);
+            color: white;
+            box-shadow: 0 0 20px var(--neon-indigo);
+            transform: translateY(-2px);
+        }
+
+        .rating-btn:active {
+            transform: translateY(0);
+        }
+
+        /* Control Buttons */
+        .control-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-family: inherit;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn-primary {
+            background: linear-gradient(45deg, var(--neon-indigo), var(--electric-purple));
+            color: white;
+        }
+
+        .btn-primary:hover {
+            box-shadow: 0 5px 15px rgba(99, 102, 241, 0.4);
+            transform: translateY(-2px);
+        }
+
+        .btn-secondary {
+            background: linear-gradient(45deg, var(--matrix-green), var(--cyber-cyan));
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            box-shadow: 0 5px 15px rgba(16, 185, 129, 0.4);
+            transform: translateY(-2px);
+        }
+
+        /* Progress Visualization */
+        .progress-viz {
+            margin-top: 20px;
+            width: 100%;
+            height: 100px;
+            background: rgba(0,0,0,0.3);
+            border-radius: 10px;
+            padding: 15px;
+            position: relative;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 4px;
+            overflow: hidden;
+            margin-bottom: 10px;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--neon-indigo), var(--electric-purple));
+            border-radius: 4px;
+            transition: width 0.5s ease;
+            box-shadow: 0 0 10px var(--neon-indigo);
+        }
+
+        .progress-text {
+            text-align: center;
+            font-size: 12px;
+            color: #94A3B8;
+        }
+
+        /* Loading States */
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 2px solid rgba(255,255,255,0.3);
+            border-radius: 50%;
+            border-top-color: var(--cyber-cyan);
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .loading-text {
+            color: #94A3B8;
+            font-size: 14px;
+        }
+
+        /* Notifications */
+        .notification {
+            position: fixed;
+            top: 80px;
+            right: 20px;
+            padding: 15px 20px;
+            border-radius: 8px;
+            color: white;
+            font-weight: bold;
+            z-index: 1001;
+            animation: slideInRight 0.3s ease;
+            max-width: 300px;
+        }
+
+        .notification.success {
+            background: var(--matrix-green);
+            border-left: 4px solid var(--cyber-cyan);
+        }
+
+        .notification.error {
+            background: var(--laser-red);
+            border-left: 4px solid var(--hologram-amber);
+        }
+
+        @keyframes slideInRight {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .main {
+                grid-template-columns: 1fr;
+            }
+
+            .sidebar {
+                position: fixed;
+                left: -250px;
+                top: 60px;
+                bottom: 0;
+                width: 250px;
+                transition: left 0.3s ease;
+                z-index: 999;
+            }
+
+            .sidebar.open {
+                left: 0;
+            }
+
+            .content {
+                grid-template-columns: 1fr;
+            }
+
+            .vocab-card {
+                height: 200px;
+            }
+
+            .card-word {
+                font-size: 24px;
+            }
+
+            .card-meaning {
+                font-size: 16px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Particle Background -->
+    <div class="particles" id="particles"></div>
+
+    <!-- Header -->
+    <header class="header">
+        <h1>🚀 CYBER SRS LEARNING HUB</h1>
+        <div class="status-bar">
+            <div class="status-item">
+                <div class="status-dot" id="api-status"></div>
+                <span id="connection-status">API: CHECKING...</span>
+            </div>
+            <div class="status-item">
+                <span id="session-info">Session: Ready</span>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Layout -->
+    <main class="main">
+        <!-- Sidebar Navigation -->
+        <nav class="sidebar" id="sidebar">
+            <a href="#" class="nav-item active" data-section="learn">🎮 LEARN</a>
+            <a href="#" class="nav-item" data-section="review">🔄 REVIEW</a>
+            <a href="#" class="nav-item" data-section="stats">📊 STATISTICS</a>
+            <a href="#" class="nav-item" data-section="settings">⚙️ SETTINGS</a>
+            <hr style="border-color: var(--glass-border); margin: 20px 0;">
+            <div style="padding: 10px; background: rgba(0,0,0,0.3); border-radius: 8px;">
+                <div style="font-size: 12px; color: #94A3B8; margin-bottom: 5px;">Current Session</div>
+                <div id="sidebar-session-info">No active session</div>
+            </div>
+        </nav>
+
+        <!-- Content Area -->
+        <div class="content">
+            <!-- Learning Panel -->
+            <section class="learning-panel" id="learning-panel">
+                <div class="vocab-card" id="vocab-card">
+                    <div class="card-inner">
+                        <div class="card-face card-front">
+                            <div class="card-word" id="current-word">Loading...</div>
+                            <div style="font-size: 14px; opacity: 0.7; margin-top: 10px;">Click to reveal meaning</div>
+                        </div>
+                        <div class="card-face card-back">
+                            <div class="card-meaning" id="word-meaning"></div>
+                            <div class="card-example" id="word-example"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="rating-buttons" id="rating-buttons" style="display: none;">
+                    <button class="rating-btn" onclick="submitReview(1)">AGAIN<br><small>1 day</small></button>
+                    <button class="rating-btn" onclick="submitReview(2)">HARD<br><small>1 day</small></button>
+                    <button class="rating-btn" onclick="submitReview(3)">GOOD<br><small>2 days</small></button>
+                    <button class="rating-btn" onclick="submitReview(4)">EASY<br><small>4-7 days</small></button>
+                </div>
+
+                <div class="control-buttons">
+                    <button class="btn btn-primary" onclick="flipCard()">👁️ REVEAL</button>
+                    <button class="btn btn-secondary" onclick="nextWord()" id="next-btn" disabled>⏭️ NEXT</button>
+                </div>
+
+                <div class="progress-viz">
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="progress-fill" style="width: 0%"></div>
+                    </div>
+                    <div class="progress-text" id="progress-text">0 / 0 words completed</div>
+                </div>
+            </section>
+
+            <!-- Dashboard Panel -->
+            <section class="dashboard" id="dashboard">
+                <div class="stat-card">
+                    <div class="stat-value" id="stat-total">0</div>
+                    <div class="stat-label">Total Words</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="stat-reviewed">0</div>
+                    <div class="stat-label">Reviewed Today</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="stat-avg-score">0.0</div>
+                    <div class="stat-label">Avg Score</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="stat-streak">0</div>
+                    <div class="stat-label">Day Streak</div>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <script>
+        // Global state
+        let currentWords = [];
+        let currentIndex = 0;
+        let sessionActive = false;
+        let apiConnected = false;
+        let currentCardFlipped = false;
+
+        // DOM elements
+        const vocabCard = document.getElementById('vocab-card');
+        const currentWordEl = document.getElementById('current-word');
+        const wordMeaningEl = document.getElementById('word-meaning');
+        const wordExampleEl = document.getElementById('word-example');
+        const ratingButtons = document.getElementById('rating-buttons');
+        const nextBtn = document.getElementById('next-btn');
+        const progressFill = document.getElementById('progress-fill');
+        const progressText = document.getElementById('progress-text');
+        const apiStatus = document.getElementById('api-status');
+        const connectionStatus = document.getElementById('connection-status');
+
+        // Initialize particles
+        function createParticles() {
+            const particlesContainer = document.getElementById('particles');
+            for (let i = 0; i < 30; i++) {
+                const particle = document.createElement('div');
+                particle.className = 'particle';
+                particle.style.left = Math.random() * 100 + '%';
+                particle.style.top = Math.random() * 100 + '%';
+                particle.style.width = Math.random() * 3 + 1 + 'px';
+                particle.style.height = particle.style.width;
+                particle.style.animationDelay = Math.random() * 6 + 's';
+                particlesContainer.appendChild(particle);
+            }
+        }
+
+        // API functions
+        async function apiCall(endpoint, method = 'GET', data = null) {
+            const baseUrl = 'http://localhost:5000';
+            try {
+                const config = {
+                    method,
+                    headers: {
+                        'Content-Type': 'application/json',
+                    }
+                };
+                if (data) config.body = JSON.stringify(data);
+
+                const response = await fetch(`${baseUrl}${endpoint}`, config);
+                const result = await response.json();
+                return { success: response.ok, data: result };
+            } catch (error) {
+                console.error('API Error:', error);
+                return { success: false, error: error.message };
+            }
+        }
+
+        async function checkAPIConnection() {
+            const result = await apiCall('/');
+            apiConnected = result.success;
+            updateConnectionStatus();
+            return apiConnected;
+        }
+
+        function updateConnectionStatus() {
+            const statusEl = apiStatus;
+            const textEl = connectionStatus;
+
+            if (apiConnected) {
+                statusEl.classList.remove('disconnected');
+                textEl.textContent = 'API: CONNECTED';
+                textEl.style.color = 'var(--matrix-green)';
+            } else {
+                statusEl.classList.add('disconnected');
+                textEl.textContent = 'API: DISCONNECTED';
+                textEl.style.color = 'var(--laser-red)';
+            }
+        }
+
+        async function loadStats() {
+            if (!apiConnected) return;
+
+            const result = await apiCall('/api/stats');
+            if (result.success) {
+                const stats = result.data;
+                document.getElementById('stat-total').textContent = stats.total_words || 0;
+                document.getElementById('stat-reviewed').textContent = stats.reviewed_words || 0;
+                document.getElementById('stat-avg-score').textContent = (stats.avg_score || 0).toFixed(1);
+                document.getElementById('stat-streak').textContent = '0'; // Placeholder
+            }
+        }
+
+        async function loadWords() {
+            if (!apiConnected) return;
+
+            const result = await apiCall('/api/words');
+            if (result.success && result.data.words) {
+                currentWords = result.data.words;
+                console.log('Loaded words:', currentWords);
+            } else {
+                // Fallback demo data
+                currentWords = [
+                    { id: 1, english: 'algorithm', indonesian: 'algoritma', part_of_speech: 'noun', example_sentence: 'The algorithm solves complex problems.' },
+                    { id: 2, english: 'database', indonesian: 'basis data', part_of_speech: 'noun', example_sentence: 'We store data in the database.' },
+                    { id: 3, english: 'function', indonesian: 'fungsi', part_of_speech: 'noun', example_sentence: 'This function calculates the result.' }
+                ];
+            }
+        }
+
+        function startSession() {
+            if (currentWords.length === 0) {
+                showNotification('No words available. Please check API connection.', 'error');
+                return;
+            }
+
+            sessionActive = true;
+            currentIndex = 0;
+            updateProgress();
+            showCurrentWord();
+            document.getElementById('session-info').textContent = 'Session: Active';
+            document.getElementById('sidebar-session-info').textContent = `${currentWords.length} words loaded`;
+        }
+
+        function showCurrentWord() {
+            if (currentIndex >= currentWords.length) {
+                showNotification('Session completed!', 'success');
+                sessionActive = false;
+                document.getElementById('session-info').textContent = 'Session: Completed';
+                return;
+            }
+
+            const word = currentWords[currentIndex];
+            currentWordEl.textContent = word.english;
+            wordMeaningEl.textContent = word.indonesian;
+            wordExampleEl.textContent = `"${word.example_sentence}"`;
+            currentCardFlipped = false;
+            vocabCard.classList.remove('flipped');
+            ratingButtons.style.display = 'none';
+            nextBtn.disabled = true;
+        }
+
+        function flipCard() {
+            if (!sessionActive) {
+                startSession();
+                return;
+            }
+
+            vocabCard.classList.add('flipped');
+            currentCardFlipped = true;
+            ratingButtons.style.display = 'grid';
+        }
+
+        async function submitReview(score) {
+            if (!currentCardFlipped || currentIndex >= currentWords.length) return;
+
+            const word = currentWords[currentIndex];
+            const result = await apiCall('/apiAction', 'POST', {
+                vocab_id: word.id,
+                quality_response: score
+            });
+
+            if (result.success) {
+                showNotification(`Review submitted! Next interval: ${result.data?.new_interval || 'calculated'} days`, 'success');
+                nextBtn.disabled = false;
+            } else {
+                showNotification('Failed to submit review. Check console for details.', 'error');
+            }
+        }
+
+        function nextWord() {
+            currentIndex++;
+            updateProgress();
+            showCurrentWord();
+        }
+
+        function updateProgress() {
+            const progress = currentWords.length > 0 ? ((currentIndex) / currentWords.length) * 100 : 0;
+            progressFill.style.width = progress + '%';
+            progressText.textContent = `${currentIndex} / ${currentWords.length} words completed`;
+        }
+
+        function showNotification(message, type = 'success') {
+            const notification = document.createElement('div');
+            notification.className = `notification ${type}`;
+            notification.textContent = message;
+            document.body.appendChild(notification);
+
+            setTimeout(() => {
+                notification.remove();
+            }, 3000);
+        }
+
+        // Navigation
+        document.querySelectorAll('.nav-item').forEach(item => {
+            item.addEventListener('click', (e) => {
+                e.preventDefault();
+                document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
+                item.classList.add('active');
+
+                const section = item.dataset.section;
+                // For now, just show learning panel. Could expand to show different sections
+                console.log('Navigating to:', section);
+            });
+        });
+
+        // Initialize
+        async function init() {
+            createParticles();
+
+            // Check API connection
+            await checkAPIConnection();
+
+            // Load initial data
+            await loadStats();
+            await loadWords();
+
+            // Auto-refresh stats every 30 seconds
+            setInterval(async () => {
+                await checkAPIConnection();
+                await loadStats();
+            }, 30000);
+
+            console.log('🚀 Cyber SRS Learning Hub initialized!');
+        }
+
+        // Start the application
+        window.onload = init;
+
+        // Keyboard shortcuts
+        document.addEventListener('keydown', (e) => {
+            if (e.key === ' ') {
+                e.preventDefault();
+                flipCard();
+            } else if (e.key === 'ArrowRight' && !nextBtn.disabled) {
+                nextWord();
+            } else if (e.key === '1' && ratingButtons.style.display !== 'none') {
+                submitReview(1);
+            } else if (e.key === '2' && ratingButtons.style.display !== 'none') {
+                submitReview(2);
+            } else if (e.key === '3' && ratingButtons.style.display !== 'none') {
+                submitReview(3);
+            } else if (e.key === '4' && ratingButtons.style.display !== 'none') {
+                submitReview(4);
+            }
+        });
+    </script>
+</body>
+</html>

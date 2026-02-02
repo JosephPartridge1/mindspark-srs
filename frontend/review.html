@@ -1,0 +1,879 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Review Kata - SRS System</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      color: #333;
+      padding: 20px;
+    }
+
+    .container {
+      max-width: 1000px;
+      margin: 0 auto;
+    }
+
+    .header {
+      text-align: center;
+      margin-bottom: 30px;
+      color: white;
+    }
+
+    .header h1 {
+      font-size: 2rem;
+      margin-bottom: 10px;
+      text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+    }
+
+    .filters-section {
+      background: white;
+      border-radius: 15px;
+      padding: 20px;
+      margin-bottom: 20px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+    }
+
+    .filters-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 15px;
+      align-items: end;
+    }
+
+    .filter-group {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .filter-label {
+      font-weight: 600;
+      margin-bottom: 5px;
+      color: #555;
+    }
+
+    .filter-select, .filter-input {
+      padding: 10px;
+      border: 2px solid #ddd;
+      border-radius: 8px;
+      font-size: 1rem;
+      transition: border-color 0.3s ease;
+    }
+
+    .filter-select:focus, .filter-input:focus {
+      outline: none;
+      border-color: #3498db;
+    }
+
+    .btn {
+      padding: 12px 25px;
+      border: none;
+      border-radius: 10px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      text-decoration: none;
+      display: inline-block;
+      text-align: center;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #3498db, #2980b9);
+      color: white;
+      box-shadow: 0 4px 15px rgba(52, 152, 219, 0.3);
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(52, 152, 219, 0.4);
+    }
+
+    .btn-secondary {
+      background: linear-gradient(135deg, #95a5a6, #7f8c8d);
+      color: white;
+      box-shadow: 0 4px 15px rgba(149, 165, 166, 0.3);
+    }
+
+    .btn-secondary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(149, 165, 166, 0.4);
+    }
+
+    .words-list {
+      background: white;
+      border-radius: 15px;
+      padding: 20px;
+      margin-bottom: 20px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+      max-height: 400px;
+      overflow-y: auto;
+    }
+
+    .words-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 15px;
+      padding-bottom: 10px;
+      border-bottom: 2px solid #ecf0f1;
+    }
+
+    .words-title {
+      font-size: 1.3rem;
+      font-weight: 600;
+      color: #2c3e50;
+    }
+
+    .words-count {
+      background: #3498db;
+      color: white;
+      padding: 5px 12px;
+      border-radius: 20px;
+      font-size: 0.9rem;
+      font-weight: 600;
+    }
+
+    .word-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 15px;
+      border: 2px solid #ecf0f1;
+      border-radius: 10px;
+      margin-bottom: 10px;
+      transition: all 0.3s ease;
+      cursor: pointer;
+    }
+
+    .word-item:hover {
+      border-color: #3498db;
+      background: #f8f9fa;
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    }
+
+    .word-item.overdue {
+      border-color: #e74c3c;
+      background: #ffeaea;
+    }
+
+    .word-item.due-soon {
+      border-color: #f39c12;
+      background: #fff8e1;
+    }
+
+    .word-content {
+      flex: 1;
+    }
+
+    .word-english {
+      font-size: 1.2rem;
+      font-weight: 600;
+      color: #2c3e50;
+      margin-bottom: 5px;
+    }
+
+    .word-indonesian {
+      color: #27ae60;
+      font-size: 1rem;
+    }
+
+    .word-meta {
+      display: flex;
+      gap: 15px;
+      font-size: 0.85rem;
+      color: #666;
+      margin-top: 5px;
+    }
+
+    .word-due {
+      color: #e74c3c;
+      font-weight: 600;
+    }
+
+    .word-difficulty {
+      padding: 3px 8px;
+      border-radius: 12px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      text-transform: uppercase;
+    }
+
+    .difficulty-easy { background: #d4edda; color: #155724; }
+    .difficulty-medium { background: #fff3cd; color: #856404; }
+    .difficulty-hard { background: #f8d7da; color: #721c24; }
+
+    .review-section {
+      background: white;
+      border-radius: 15px;
+      padding: 30px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+      display: none;
+    }
+
+    .review-card {
+      text-align: center;
+      margin-bottom: 30px;
+    }
+
+    .review-word {
+      font-size: 3rem;
+      font-weight: bold;
+      color: #2c3e50;
+      margin-bottom: 20px;
+      text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
+    }
+
+    .review-meaning {
+      font-size: 1.5rem;
+      color: #27ae60;
+      margin: 20px 0;
+      opacity: 0;
+      transition: opacity 0.5s ease;
+    }
+
+    .review-meaning.show {
+      opacity: 1;
+    }
+
+    .rating-section {
+      margin: 30px 0;
+      opacity: 0;
+      transition: opacity 0.5s ease;
+    }
+
+    .rating-section.show {
+      opacity: 1;
+    }
+
+    .rating-buttons {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-bottom: 20px;
+    }
+
+    .rating-btn {
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      border: 3px solid #ddd;
+      background: white;
+      font-size: 1.5rem;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .rating-btn:hover {
+      transform: scale(1.1);
+      border-color: #3498db;
+    }
+
+    .rating-btn.selected {
+      background: #3498db;
+      color: white;
+      border-color: #3498db;
+      transform: scale(1.1);
+    }
+
+    .rating-labels {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.8rem;
+      color: #666;
+      margin-top: 10px;
+    }
+
+    .confirmation {
+      background: #d4edda;
+      color: #155724;
+      padding: 15px;
+      border-radius: 10px;
+      margin: 20px 0;
+      border: 1px solid #c3e6cb;
+      opacity: 0;
+      transition: opacity 0.5s ease;
+    }
+
+    .confirmation.show {
+      opacity: 1;
+    }
+
+    .review-actions {
+      display: flex;
+      justify-content: center;
+      gap: 15px;
+      flex-wrap: wrap;
+    }
+
+    .history-section {
+      background: #f8f9fa;
+      border-radius: 10px;
+      padding: 20px;
+      margin-top: 20px;
+    }
+
+    .history-title {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin-bottom: 15px;
+      color: #2c3e50;
+    }
+
+    .history-list {
+      max-height: 150px;
+      overflow-y: auto;
+    }
+
+    .history-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 8px 0;
+      border-bottom: 1px solid #dee2e6;
+    }
+
+    .history-item:last-child {
+      border-bottom: none;
+    }
+
+    .history-rating {
+      font-weight: 600;
+      padding: 2px 8px;
+      border-radius: 10px;
+      font-size: 0.8rem;
+    }
+
+    .rating-1, .rating-2 { background: #f8d7da; color: #721c24; }
+    .rating-3 { background: #fff3cd; color: #856404; }
+    .rating-4, .rating-5 { background: #d4edda; color: #155724; }
+
+    .loading {
+      text-align: center;
+      padding: 40px;
+      color: #666;
+    }
+
+    .error {
+      background: #f8d7da;
+      color: #721c24;
+      padding: 15px;
+      border-radius: 10px;
+      margin: 20px 0;
+      border: 1px solid #f5c6cb;
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 60px 20px;
+      color: #666;
+    }
+
+    .empty-state h3 {
+      font-size: 1.5rem;
+      margin-bottom: 10px;
+      color: #2c3e50;
+    }
+
+    .quick-review-toggle {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 15px;
+    }
+
+    .toggle-switch {
+      position: relative;
+      width: 50px;
+      height: 24px;
+      background: #ccc;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: background 0.3s ease;
+    }
+
+    .toggle-switch.active {
+      background: #3498db;
+    }
+
+    .toggle-slider {
+      position: absolute;
+      top: 2px;
+      left: 2px;
+      width: 20px;
+      height: 20px;
+      background: white;
+      border-radius: 50%;
+      transition: transform 0.3s ease;
+    }
+
+    .toggle-switch.active .toggle-slider {
+      transform: translateX(26px);
+    }
+
+    @media (max-width: 768px) {
+      .container {
+        padding: 10px;
+      }
+
+      .filters-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .word-item {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+      }
+
+      .word-meta {
+        flex-direction: column;
+        gap: 5px;
+      }
+
+      .review-word {
+        font-size: 2.5rem;
+      }
+
+      .rating-buttons {
+        gap: 5px;
+      }
+
+      .rating-btn {
+        width: 45px;
+        height: 45px;
+        font-size: 1.3rem;
+      }
+
+      .review-actions {
+        flex-direction: column;
+      }
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .fade-in {
+      animation: fadeIn 0.6s ease forwards;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header class="header">
+      <h1>Review Kata</h1>
+      <p>Tinjau kata-kata yang perlu diulang</p>
+    </header>
+
+    <div id="error-message" class="error" style="display: none;"></div>
+
+    <div id="loading" class="loading">
+      <p>Memuat kata-kata yang perlu direview...</p>
+    </div>
+
+    <div id="main-content" style="display: none;">
+      <section class="filters-section fade-in">
+        <div class="filters-grid">
+          <div class="filter-group">
+            <label class="filter-label">Filter Kesulitan:</label>
+            <select class="filter-select" id="difficulty-filter">
+              <option value="all">Semua Kesulitan</option>
+              <option value="hard">Sulit</option>
+              <option value="medium">Sedang</option>
+              <option value="easy">Mudah</option>
+            </select>
+          </div>
+          <div class="filter-group">
+            <label class="filter-label">Urutkan Berdasarkan:</label>
+            <select class="filter-select" id="sort-filter">
+              <option value="due-date">Tanggal Jatuh Tempo</option>
+              <option value="difficulty">Kesulitan</option>
+              <option value="overdue">Keterlambatan</option>
+            </select>
+          </div>
+          <div class="filter-group">
+            <div class="quick-review-toggle">
+              <div class="toggle-switch" id="quick-review-toggle" onclick="toggleQuickReview()">
+                <div class="toggle-slider"></div>
+              </div>
+              <label class="filter-label">Quick Review (Kata Mudah)</label>
+            </div>
+          </div>
+          <div class="filter-group">
+            <button class="btn btn-primary" onclick="applyFilters()">Terapkan Filter</button>
+          </div>
+        </div>
+      </section>
+
+      <section class="words-list fade-in" id="words-list">
+        <div class="words-header">
+          <h3 class="words-title">Kata yang Perlu Direview</h3>
+          <span class="words-count" id="words-count">0 kata</span>
+        </div>
+        <div id="words-container">
+          <!-- Words will be loaded here -->
+        </div>
+      </section>
+
+      <section class="review-section fade-in" id="review-section">
+        <div class="review-card">
+          <div class="review-word" id="review-word">Loading...</div>
+
+          <div class="review-meaning" id="review-meaning">Klik "Tampilkan Arti" untuk melihat terjemahan</div>
+
+          <div id="show-meaning-btn">
+            <button class="btn btn-primary" onclick="showMeaning()">Tampilkan Arti</button>
+          </div>
+
+          <div class="rating-section" id="rating-section">
+            <p style="margin-bottom: 15px; color: #666;">Seberapa mudah Anda mengingat kata ini?</p>
+            <div class="rating-buttons">
+              <button class="rating-btn" onclick="rateWord(1)">😵</button>
+              <button class="rating-btn" onclick="rateWord(2)">😟</button>
+              <button class="rating-btn" onclick="rateWord(3)">😐</button>
+              <button class="rating-btn" onclick="rateWord(4)">😊</button>
+              <button class="rating-btn" onclick="rateWord(5)">😄</button>
+            </div>
+            <div class="rating-labels">
+              <span>Sangat Sulit</span>
+              <span>Sangat Mudah</span>
+            </div>
+          </div>
+
+          <div class="confirmation" id="confirmation" style="display: none;">
+            <p id="confirmation-text"></p>
+          </div>
+        </div>
+
+        <div class="history-section">
+          <h4 class="history-title">Histori Review</h4>
+          <div class="history-list" id="review-history">
+            <!-- Review history will be loaded here -->
+          </div>
+        </div>
+
+        <div class="review-actions">
+          <button class="btn btn-primary" id="next-btn" onclick="nextWord()" style="display: none;">Kata Berikutnya</button>
+          <button class="btn btn-secondary" onclick="backToList()">Kembali ke List</button>
+          <button class="btn btn-secondary" onclick="goToDashboard()">Dashboard</button>
+        </div>
+      </section>
+    </div>
+  </div>
+
+  <script>
+    const API_BASE = 'http://127.0.0.1:5000';
+
+    let allWords = [];
+    let filteredWords = [];
+    let currentWordIndex = 0;
+    let currentWord = null;
+    let quickReviewMode = false;
+    let selectedRating = null;
+
+    async function fetchDueWords() {
+      try {
+        const response = await fetch(`${API_BASE}/api/words`);
+        if (!response.ok) throw new Error('Gagal mengambil data kata');
+        const words = await response.json();
+
+        // Filter words that are due for review (simplified - in real app would check review dates)
+        const dueWords = words.map(word => ({
+          ...word,
+          due_date: new Date(Date.now() - Math.random() * 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], // Mock due dates
+          difficulty: Math.floor(Math.random() * 3) + 1, // Mock difficulty 1-3
+          is_overdue: Math.random() > 0.7,
+          review_history: generateMockHistory()
+        }));
+
+        return dueWords;
+      } catch (error) {
+        throw new Error(`Error fetching words: ${error.message}`);
+      }
+    }
+
+    function generateMockHistory() {
+      const history = [];
+      const count = Math.floor(Math.random() * 5) + 1;
+      for (let i = 0; i < count; i++) {
+        history.push({
+          date: new Date(Date.now() - Math.random() * 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+          rating: Math.floor(Math.random() * 5) + 1
+        });
+      }
+      return history.sort((a, b) => new Date(b.date) - new Date(a.date));
+    }
+
+    function applyFilters() {
+      const difficultyFilter = document.getElementById('difficulty-filter').value;
+      const sortFilter = document.getElementById('sort-filter').value;
+
+      filteredWords = [...allWords];
+
+      // Apply difficulty filter
+      if (difficultyFilter !== 'all') {
+        const difficultyMap = { 'easy': 1, 'medium': 2, 'hard': 3 };
+        filteredWords = filteredWords.filter(word => word.difficulty === difficultyMap[difficultyFilter]);
+      }
+
+      // Apply sorting
+      switch (sortFilter) {
+        case 'due-date':
+          filteredWords.sort((a, b) => new Date(a.due_date) - new Date(b.due_date));
+          break;
+        case 'difficulty':
+          filteredWords.sort((a, b) => b.difficulty - a.difficulty);
+          break;
+        case 'overdue':
+          filteredWords.sort((a, b) => {
+            if (a.is_overdue && !b.is_overdue) return -1;
+            if (!a.is_overdue && b.is_overdue) return 1;
+            return new Date(a.due_date) - new Date(b.due_date);
+          });
+          break;
+      }
+
+      renderWordsList();
+    }
+
+    function toggleQuickReview() {
+      quickReviewMode = !quickReviewMode;
+      const toggle = document.getElementById('quick-review-toggle');
+      toggle.classList.toggle('active');
+
+      if (quickReviewMode) {
+        // In quick review mode, only show easy words
+        filteredWords = allWords.filter(word => word.difficulty === 1);
+      } else {
+        applyFilters();
+      }
+
+      renderWordsList();
+    }
+
+    function renderWordsList() {
+      const container = document.getElementById('words-container');
+      const countElement = document.getElementById('words-count');
+
+      if (filteredWords.length === 0) {
+        container.innerHTML = `
+          <div class="empty-state">
+            <h3>Tidak ada kata yang perlu direview</h3>
+            <p>Semua kata sudah dalam jadwal review yang tepat.</p>
+          </div>
+        `;
+        countElement.textContent = '0 kata';
+        return;
+      }
+
+      countElement.textContent = `${filteredWords.length} kata`;
+
+      container.innerHTML = filteredWords.map((word, index) => {
+        const dueDate = new Date(word.due_date);
+        const today = new Date();
+        const isOverdue = dueDate < today;
+        const daysDiff = Math.ceil((dueDate - today) / (1000 * 60 * 60 * 24));
+
+        let itemClass = 'word-item';
+        if (isOverdue) itemClass += ' overdue';
+        else if (daysDiff <= 1) itemClass += ' due-soon';
+
+        const difficultyClass = word.difficulty === 1 ? 'easy' : word.difficulty === 2 ? 'medium' : 'hard';
+        const difficultyText = word.difficulty === 1 ? 'Mudah' : word.difficulty === 2 ? 'Sedang' : 'Sulit';
+
+        return `
+          <div class="${itemClass}" onclick="startReview(${index})">
+            <div class="word-content">
+              <div class="word-english">${word.english}</div>
+              <div class="word-indonesian">${word.indonesian}</div>
+              <div class="word-meta">
+                <span class="word-due">${isOverdue ? `${Math.abs(daysDiff)} hari terlambat` : `Jatuh tempo dalam ${daysDiff} hari`}</span>
+                <span class="word-difficulty difficulty-${difficultyClass}">${difficultyText}</span>
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function startReview(index) {
+      currentWordIndex = index;
+      currentWord = filteredWords[index];
+
+      document.getElementById('words-list').style.display = 'none';
+      document.getElementById('review-section').style.display = 'block';
+
+      showReviewWord();
+      renderReviewHistory();
+    }
+
+    function showReviewWord() {
+      document.getElementById('review-word').textContent = currentWord.english;
+      document.getElementById('review-meaning').textContent = currentWord.indonesian;
+      document.getElementById('review-meaning').classList.remove('show');
+      document.getElementById('rating-section').classList.remove('show');
+      document.getElementById('confirmation').style.display = 'none';
+      document.getElementById('next-btn').style.display = 'none';
+      document.getElementById('show-meaning-btn').style.display = 'block';
+      selectedRating = null;
+
+      // Reset rating buttons
+      document.querySelectorAll('.rating-btn').forEach(btn => {
+        btn.classList.remove('selected');
+      });
+    }
+
+    function showMeaning() {
+      document.getElementById('review-meaning').classList.add('show');
+      document.getElementById('show-meaning-btn').style.display = 'none';
+      document.getElementById('rating-section').classList.add('show');
+    }
+
+    function rateWord(rating) {
+      selectedRating = rating;
+
+      // Update UI
+      document.querySelectorAll('.rating-btn').forEach((btn, index) => {
+        if (index + 1 === rating) {
+          btn.classList.add('selected');
+        } else {
+          btn.classList.remove('selected');
+        }
+      });
+
+      // Show confirmation
+      const confirmations = {
+        1: 'Kata ini akan diulang dalam 1 hari',
+        2: 'Kata ini akan diulang dalam 1 hari',
+        3: 'Kata ini akan diulang dalam 3 hari',
+        4: 'Kata ini akan diulang dalam 1 minggu',
+        5: 'Kata ini akan diulang dalam 2 minggu'
+      };
+
+      document.getElementById('confirmation-text').textContent = confirmations[rating];
+      document.getElementById('confirmation').style.display = 'block';
+      document.getElementById('next-btn').style.display = 'inline-block';
+    }
+
+    async function nextWord() {
+      if (!selectedRating) {
+        alert('Silakan pilih rating terlebih dahulu!');
+        return;
+      }
+
+      // Submit the answer (mock - in real app would call API)
+      try {
+        await submitAnswer(currentWord.english, selectedRating);
+        // Add to history
+        currentWord.review_history.unshift({
+          date: new Date().toISOString().split('T')[0],
+          rating: selectedRating
+        });
+      } catch (error) {
+        console.error('Error submitting answer:', error);
+      }
+
+      currentWordIndex++;
+
+      if (currentWordIndex < filteredWords.length) {
+        currentWord = filteredWords[currentWordIndex];
+        showReviewWord();
+        renderReviewHistory();
+      } else {
+        alert('Semua kata telah direview! Kembali ke dashboard.');
+        goToDashboard();
+      }
+    }
+
+    async function submitAnswer(word, rating) {
+      try {
+        const response = await fetch(`${API_BASE}/answer`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            word: word,
+            quality: rating.toString()
+          })
+        });
+        if (!response.ok) throw new Error('Gagal mengirim jawaban');
+        return await response.json();
+      } catch (error) {
+        throw new Error(`Error submitting answer: ${error.message}`);
+      }
+    }
+
+    function renderReviewHistory() {
+      const historyContainer = document.getElementById('review-history');
+
+      if (!currentWord.review_history || currentWord.review_history.length === 0) {
+        historyContainer.innerHTML = '<p style="color: #666; font-style: italic;">Belum ada histori review</p>';
+        return;
+      }
+
+      historyContainer.innerHTML = currentWord.review_history.slice(0, 5).map(review => `
+        <div class="history-item">
+          <span>${review.date}</span>
+          <span class="history-rating rating-${review.rating}">Rating ${review.rating}</span>
+        </div>
+      `).join('');
+    }
+
+    function backToList() {
+      document.getElementById('review-section').style.display = 'none';
+      document.getElementById('words-list').style.display = 'block';
+    }
+
+    function goToDashboard() {
+      window.location.href = 'index.html';
+    }
+
+    function showError(message) {
+      const errorDiv = document.getElementById('error-message');
+      errorDiv.textContent = message;
+      errorDiv.style.display = 'block';
+    }
+
+    async function loadReviewPage() {
+      try {
+        document.getElementById('loading').style.display = 'block';
+        document.getElementById('error-message').style.display = 'none';
+
+        allWords = await fetchDueWords();
+        filteredWords = [...allWords];
+
+        document.getElementById('loading').style.display = 'none';
+        document.getElementById('main-content').style.display = 'block';
+
+        renderWordsList();
+
+      } catch (error) {
+        document.getElementById('loading').style.display = 'none';
+        showError(`Gagal memuat halaman review: ${error.message}`);
+        console.error('Review page error:', error);
+      }
+    }
+
+    // Load the review page when it loads
+    document.addEventListener('DOMContentLoaded', loadReviewPage);
+  </script>
+</body>
+</html>

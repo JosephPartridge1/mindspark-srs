@@ -1,0 +1,188 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🚀 CYBER SRS LEARNING HUB</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <style>
+        /* Critical CSS for input field to prevent FOUC */
+        #answer-input {
+            width: 100%;
+            max-width: 600px;
+            height: 70px;
+            padding: 20px 25px;
+            font-size: 22px;
+            font-family: 'Courier New', monospace;
+            font-weight: bold;
+            background: rgba(10, 10, 20, 0.9);
+            border: 3px solid #00f3ff;
+            border-radius: 15px;
+            color: #00f3ff;
+            box-shadow: 0 0 25px rgba(0, 243, 255, 0.5);
+            transition: all 0.3s ease;
+            box-sizing: border-box;
+            display: block;
+            margin: 0 auto;
+        }
+        #answer-input.correct {
+            border-color: #00ff9d;
+            background: rgba(0, 255, 157, 0.1);
+            color: #00ff9d;
+        }
+        #answer-input.incorrect {
+            border-color: #ff0066;
+            background: rgba(255, 0, 102, 0.1);
+            color: #ff0066;
+        }
+    </style>
+</head>
+<body>
+    <!-- Particle Background -->
+    <div class="particles" id="particles"></div>
+
+    <!-- Header -->
+    <header class="header">
+        <h1>🚀 CYBER SRS LEARNING HUB</h1>
+        <div class="status-bar">
+            <div class="status-item">
+                <div class="status-dot" id="api-status"></div>
+                <span id="connection-status">API: CHECKING...</span>
+            </div>
+            <div class="status-item">
+                <span id="session-info">Session: Ready</span>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Layout -->
+    <main class="main">
+
+        <!-- Content Area -->
+        <div class="content">
+            <!-- LEARN PAGE -->
+            <div id="learn-page" class="page active">
+                <section class="learning-panel">
+                    <div class="page-header">
+                        <h2>🎮 LEARNING SESSION</h2>
+                        <div class="goal-display">
+                            <span class="goal-text">Today's Goal: <span id="daily-goal">0/20</span> words</span>
+                        </div>
+                    </div>
+
+                    <!-- Enhanced Typing Exercise UI -->
+                    <div class="typing-exercise" id="typing-exercise">
+                        <!-- Progress Bar -->
+                        <div class="progress-section">
+                            <div class="progress-bar">
+                                <div class="progress-fill" id="progress-fill" style="width: 0%"></div>
+                            </div>
+                            <div class="progress-text" id="progress-text">0 / 10 words completed</div>
+                        </div>
+
+                        <!-- Word Information Card -->
+                        <div class="word-info-card">
+                            <div class="word-header">
+                                <h3>KATA SAAT INI</h3>
+                            </div>
+                            <div class="word-content">
+                                <div class="english-word" id="english-word">Loading...</div>
+                                <div class="word-details">
+                                    <span class="part-of-speech" id="part-of-speech">[noun]</span>
+                                    <div class="example-sentence" id="example-sentence">"Example sentence here."</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Translation Input Section -->
+                        <div class="translation-section">
+                            <div class="translation-header">
+                                <h3>TERJEMAHKAN KE BAHASA INDONESIA</h3>
+                                <div class="input-hint">* Case-insensitive, auto-trim</div>
+                            </div>
+
+                            <div class="input-container">
+                                <div class="input-wrapper">
+                                    <input
+                                        type="text"
+                                        id="answer-input"
+                                        class="enhanced-input"
+                                        placeholder="Ketik terjemahan (Bahasa Indonesia)..."
+                                        autocomplete="off"
+                                        autofocus
+                                        spellcheck="false"
+                                    >
+                                    <button id="submit-btn" class="cyber-button">
+                                        <span class="btn-text">SUBMIT</span>
+                                        <span class="btn-icon">➡️</span>  
+                                    </button>  
+                                </div>
+
+
+                            </div>
+                        </div>
+
+                        <!-- Status & Feedback -->
+                        <div class="status-section">
+                            <div class="status-indicator" id="status-indicator">STATUS: Menunggu jawaban...</div>
+                            <div class="feedback-container" id="feedback-container" style="display: none;">
+                                <div class="feedback-message" id="feedback-message"></div>
+                                <div class="streak-info" id="streak-info"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Legacy Flashcard UI (hidden by default) -->
+                    <div class="vocab-card" id="vocab-card" style="display: none;">
+                        <div class="card-inner">
+                            <div class="card-face card-front">
+                                <div class="card-word" id="current-word">Loading...</div>
+                                <div class="card-hint">Click to reveal meaning</div>
+                            </div>
+                            <div class="card-face card-back">
+                                <div class="card-meaning" id="word-meaning"></div>
+                                <div class="card-example" id="word-example"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="rating-buttons" id="rating-buttons" style="display: none;">
+                        <button class="rating-btn again" onclick="submitReview(1)">
+                            <div class="rating-icon">❌</div>
+                            <div class="rating-text">AGAIN</div>
+                            <div class="rating-desc">1 day</div>
+                        </button>
+                        <button class="rating-btn hard" onclick="submitReview(2)">
+                            <div class="rating-icon">⚠️</div>
+                            <div class="rating-text">HARD</div>
+                            <div class="rating-desc">1 day</div>
+                        </button>
+                        <button class="rating-btn good" onclick="submitReview(3)">
+                            <div class="rating-icon">✅</div>
+                            <div class="rating-text">GOOD</div>
+                            <div class="rating-desc">2 days</div>
+                        </button>
+                        <button class="rating-btn easy" onclick="submitReview(4)">
+                            <div class="rating-icon">🚀</div>
+                            <div class="rating-text">EASY</div>
+                            <div class="rating-desc">4-7 days</div>
+                        </button>
+                    </div>
+
+                    <div class="control-buttons" style="display: none;">
+                        <button class="btn btn-primary" onclick="flipCard()">👁️ REVEAL</button>
+                        <button class="btn btn-secondary" onclick="nextWord()" id="next-btn" disabled>⏭️ NEXT</button>
+                    </div>
+
+                    <div class="progress-viz">
+                        <div class="progress-bar">
+                            <div class="progress-fill" id="progress-fill" style="width: 0%"></div>
+                        </div>
+                        <div class="progress-text" id="progress-text">0 / 0 words completed</div>
+                    </div>
+                </section>
+            </div>
+
+</body>
+</html>
