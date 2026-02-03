@@ -82,32 +82,89 @@ DATABASE = '/tmp/srs_vocab.db' if is_railway else 'srs_vocab.db'
 logger.info(f"📁 Using database path: {DATABASE}")
 
 def get_db():
+    """Lazy database connection with timeout, retry, and fallback"""
     if 'db' not in g:
         logger.info("🔌 Establishing database connection...")
-        # Try PostgreSQL first (Railway)
-        db_url = os.environ.get('DATABASE_URL')
+        g.db = _connect_with_retry_and_fallback()
 
-        if db_url and db_url.startswith('postgres'):
-            # Convert postgres:// to postgresql://
-            if db_url.startswith('postgres://'):
-                db_url = db_url.replace('postgres://', 'postgresql://', 1)
+        # Initialize database if needed (lazy initialization)
+        _ensure_database_initialized(g.db)
 
+    return g.db
+
+def _ensure_database_initialized(conn):
+    """Ensure database is initialized (called lazily on first access)"""
+    try:
+        # Check if database needs initialization
+        health = check_database_health(conn)
+        if not health['healthy']:
+            logger.warning(f"⚠️  Database not healthy: {health.get('error', 'Unknown error')}")
+            logger.info("🚀 Initializing database...")
+
+            # Detect database type
+            db_type = detect_db_type(conn)
+            logger.info(f"📊 Detected database type: {db_type}")
+
+            # Initialize database
+            init_database(conn, db_type)
+            logger.info("✅ Database initialization completed")
+        else:
+            logger.info("✅ Database is healthy and initialized")
+
+    except Exception as e:
+        logger.error(f"❌ Database initialization failed: {e}", exc_info=True)
+        # Don't raise - allow app to continue with uninitialized database
+        # API endpoints will handle database errors gracefully
+
+def _connect_with_retry_and_fallback():
+    """Connect to database with retry logic and fallback to SQLite"""
+    import time
+
+    # Try PostgreSQL first (Railway) with retry
+    db_url = os.environ.get('DATABASE_URL')
+
+    if db_url and db_url.startswith('postgres'):
+        # Convert postgres:// to postgresql://
+        if db_url.startswith('postgres://'):
+            db_url = db_url.replace('postgres://', 'postgresql://', 1)
+
+        # Retry with exponential backoff (max 3 attempts, total ~7 seconds)
+        max_retries = 3
+        for attempt in range(max_retries):
             try:
+                logger.info(f"🔄 Attempting PostgreSQL connection (attempt {attempt + 1}/{max_retries})...")
                 import psycopg2
-                g.db = psycopg2.connect(db_url, sslmode='require')
+                # Add connection timeout
+                conn = psycopg2.connect(
+                    db_url,
+                    sslmode='require',
+                    connect_timeout=5,  # 5 second timeout
+                    options='-c statement_timeout=5000'  # 5 second query timeout
+                )
                 logger.info("✅ Connected to PostgreSQL database")
-                # Note: PostgreSQL doesn't need row_factory like SQLite
+                return conn
+
             except ImportError:
                 logger.warning("⚠️  PostgreSQL driver not available, falling back to SQLite")
-                g.db = sqlite3.connect(DATABASE, check_same_thread=False)
-                g.db.row_factory = sqlite3.Row
-                logger.info("✅ Connected to SQLite database (fallback)")
-        else:
-            # Fallback to SQLite (built-in, always works)
-            g.db = sqlite3.connect(DATABASE, check_same_thread=False)
-            g.db.row_factory = sqlite3.Row
-            logger.info("✅ Connected to SQLite database")
-    return g.db
+                break
+            except Exception as e:
+                wait_time = 2 ** attempt  # Exponential backoff: 1s, 2s, 4s
+                logger.warning(f"⚠️  PostgreSQL connection failed (attempt {attempt + 1}): {e}")
+                if attempt < max_retries - 1:
+                    logger.info(f"⏳ Retrying in {wait_time} seconds...")
+                    time.sleep(wait_time)
+                else:
+                    logger.error("❌ PostgreSQL connection failed after all retries, falling back to SQLite")
+
+    # Fallback to SQLite (built-in, always works)
+    try:
+        conn = sqlite3.connect(DATABASE, check_same_thread=False)
+        conn.row_factory = sqlite3.Row
+        logger.info("✅ Connected to SQLite database (fallback)")
+        return conn
+    except Exception as e:
+        logger.critical(f"❌ CRITICAL: Even SQLite connection failed: {e}")
+        raise
 
 @app.teardown_appcontext
 def close_db(e=None):
@@ -145,14 +202,9 @@ def init_app_database():
         logger.error(f"❌ Database initialization failed: {e}", exc_info=True)
         raise
 
-# Call database initialization on app startup
-try:
-    with app.app_context():
-        init_app_database()
-    logger.info("✅ Database initialization check completed")
-except Exception as e:
-    logger.critical(f"❌ Critical error during database setup: {e}", exc_info=True)
-    raise
+# Database initialization is now lazy - happens on first database access
+# This allows the app to start immediately without blocking on database connection
+logger.info("✅ App startup completed - database will be initialized on first access")
 
 # Manual database initialization endpoint
 @app.route('/api/init-db', methods=['POST'])
