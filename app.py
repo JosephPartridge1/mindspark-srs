@@ -12,6 +12,7 @@ from datetime import datetime, timedelta
 from srs_algorithm import SRSAlgorithm
 from db_init import init_database, check_database_health, detect_db_type
 from database_adapter import db_adapter
+from database_resilience import get_resilient_connection, get_connection_status
 
 # Baris 1-15: Imports and app initialization
 app = Flask(__name__)
@@ -82,10 +83,10 @@ DATABASE = '/tmp/srs_vocab.db' if is_railway else 'srs_vocab.db'
 logger.info(f"📁 Using database path: {DATABASE}")
 
 def get_db():
-    """Lazy database connection with timeout, retry, and fallback"""
+    """Lazy database connection with full resilience"""
     if 'db' not in g:
         logger.info("🔌 Establishing database connection...")
-        g.db = _connect_with_retry_and_fallback()
+        g.db = get_resilient_connection()
 
         # Initialize database if needed (lazy initialization)
         _ensure_database_initialized(g.db)
@@ -116,55 +117,7 @@ def _ensure_database_initialized(conn):
         # Don't raise - allow app to continue with uninitialized database
         # API endpoints will handle database errors gracefully
 
-def _connect_with_retry_and_fallback():
-    """Connect to database with retry logic and fallback to SQLite"""
-    import time
 
-    # Try PostgreSQL first (Railway) with retry
-    db_url = os.environ.get('DATABASE_URL')
-
-    if db_url and db_url.startswith('postgres'):
-        # Convert postgres:// to postgresql://
-        if db_url.startswith('postgres://'):
-            db_url = db_url.replace('postgres://', 'postgresql://', 1)
-
-        # Retry with exponential backoff (max 3 attempts, total ~7 seconds)
-        max_retries = 3
-        for attempt in range(max_retries):
-            try:
-                logger.info(f"🔄 Attempting PostgreSQL connection (attempt {attempt + 1}/{max_retries})...")
-                import psycopg2
-                # Add connection timeout
-                conn = psycopg2.connect(
-                    db_url,
-                    sslmode='require',
-                    connect_timeout=5,  # 5 second timeout
-                    options='-c statement_timeout=5000'  # 5 second query timeout
-                )
-                logger.info("✅ Connected to PostgreSQL database")
-                return conn
-
-            except ImportError:
-                logger.warning("⚠️  PostgreSQL driver not available, falling back to SQLite")
-                break
-            except Exception as e:
-                wait_time = 2 ** attempt  # Exponential backoff: 1s, 2s, 4s
-                logger.warning(f"⚠️  PostgreSQL connection failed (attempt {attempt + 1}): {e}")
-                if attempt < max_retries - 1:
-                    logger.info(f"⏳ Retrying in {wait_time} seconds...")
-                    time.sleep(wait_time)
-                else:
-                    logger.error("❌ PostgreSQL connection failed after all retries, falling back to SQLite")
-
-    # Fallback to SQLite (built-in, always works)
-    try:
-        conn = sqlite3.connect(DATABASE, check_same_thread=False)
-        conn.row_factory = sqlite3.Row
-        logger.info("✅ Connected to SQLite database (fallback)")
-        return conn
-    except Exception as e:
-        logger.critical(f"❌ CRITICAL: Even SQLite connection failed: {e}")
-        raise
 
 @app.teardown_appcontext
 def close_db(e=None):
@@ -572,6 +525,9 @@ def test_connection():
 def health_check():
     """Health check endpoint for Railway deployment monitoring"""
     try:
+        # Get database resilience status
+        db_status = get_connection_status()
+
         # Test database connection
         conn = get_db()
         cursor = conn.cursor()
@@ -580,16 +536,19 @@ def health_check():
 
         return jsonify({
             'status': 'healthy',
-            'database': 'connected',
+            'database': db_status,
             'db_path': DATABASE,
             'timestamp': datetime.now().isoformat(),
             'environment': 'railway' if os.environ.get('RAILWAY_ENVIRONMENT') else 'local'
         })
     except Exception as e:
         logger.error(f"Health check failed: {e}", exc_info=True)
+        # Get database resilience status even on failure
+        db_status = get_connection_status()
         return jsonify({
             'status': 'unhealthy',
             'error': str(e),
+            'database': db_status,
             'db_path': DATABASE,
             'timestamp': datetime.now().isoformat()
         }), 500

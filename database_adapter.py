@@ -6,6 +6,7 @@ Supports both SQLite (local development) and PostgreSQL (Railway production)
 import os
 import logging
 from typing import Any, List, Tuple, Optional
+from database_resilience import get_resilient_connection
 
 logger = logging.getLogger(__name__)
 
@@ -20,78 +21,28 @@ class DatabaseAdapter:
         logger.info(f"🗄️ DatabaseAdapter initialized for {'PostgreSQL' if self.is_postgresql else 'SQLite'}")
 
     def get_connection(self):
-        """Get database connection with appropriate cursor (lazy with retry/fallback)"""
+        """Get database connection with full resilience"""
         if self._connection is not None:
             return self._connection
 
-        # Determine database type from environment
-        self.is_postgresql = bool(os.environ.get('DATABASE_URL'))
+        # Use the resilient connection system
+        conn = get_resilient_connection()
 
+        # Determine database type from connection
+        self.is_postgresql = hasattr(conn, 'cursor_factory')  # PostgreSQL connections have this
+
+        # Create appropriate cursor
         if self.is_postgresql:
-            self._connection = self._connect_with_retry_and_fallback()
+            # PostgreSQL: use RealDictCursor for consistency
+            from psycopg2.extras import RealDictCursor
+            self._connection = conn.cursor(cursor_factory=RealDictCursor)
         else:
-            self._connection = self._get_sqlite_connection()
+            # SQLite or Mock: connection is already the cursor
+            self._connection = conn
 
         return self._connection
 
-    def _connect_with_retry_and_fallback(self):
-        """Connect to database with retry logic and fallback to SQLite"""
-        import time
 
-        # Try PostgreSQL first (Railway) with retry
-        db_url = os.environ.get('DATABASE_URL')
-
-        if db_url and db_url.startswith('postgres'):
-            # Convert postgres:// to postgresql://
-            if db_url.startswith('postgres://'):
-                db_url = db_url.replace('postgres://', 'postgresql://', 1)
-
-            # Retry with exponential backoff (max 3 attempts, total ~7 seconds)
-            max_retries = 3
-            for attempt in range(max_retries):
-                try:
-                    logger.info(f"🔄 Attempting PostgreSQL connection (attempt {attempt + 1}/{max_retries})...")
-                    import psycopg2
-                    from psycopg2.extras import RealDictCursor
-
-                    # Add connection timeout
-                    conn = psycopg2.connect(
-                        db_url,
-                        sslmode='require',
-                        connect_timeout=5,  # 5 second timeout
-                        options='-c statement_timeout=5000'  # 5 second query timeout
-                    )
-                    cursor = conn.cursor(cursor_factory=RealDictCursor)
-                    logger.info("✅ Connected to PostgreSQL database")
-                    return cursor
-
-                except ImportError:
-                    logger.warning("⚠️  PostgreSQL driver not available, falling back to SQLite")
-                    break
-                except Exception as e:
-                    wait_time = 2 ** attempt  # Exponential backoff: 1s, 2s, 4s
-                    logger.warning(f"⚠️  PostgreSQL connection failed (attempt {attempt + 1}): {e}")
-                    if attempt < max_retries - 1:
-                        logger.info(f"⏳ Retrying in {wait_time} seconds...")
-                        time.sleep(wait_time)
-                    else:
-                        logger.error("❌ PostgreSQL connection failed after all retries, falling back to SQLite")
-
-        # Fallback to SQLite (built-in, always works)
-        try:
-            return self._get_sqlite_connection()
-        except Exception as e:
-            logger.critical(f"❌ CRITICAL: Even SQLite connection failed: {e}")
-            raise
-
-    def _get_sqlite_connection(self):
-        """Get SQLite connection"""
-        import sqlite3
-        conn = sqlite3.connect('srs_vocab.db', check_same_thread=False)
-        conn.row_factory = sqlite3.Row
-        self._connection = conn.cursor()
-        logger.info("✅ Connected to SQLite database")
-        return self._connection
 
     def adapt_sql(self, sql: str) -> str:
         """
