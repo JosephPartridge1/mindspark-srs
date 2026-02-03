@@ -936,61 +936,110 @@ def session_complete():
 @app.route('/api/session/answer', methods=['POST'])
 def session_answer():
     data = request.get_json()
-    print(f"📥 Received answer data: {data}")  # LOG untuk debug
+    logger.info(f"📥 Received answer data: {data}")
 
     # VALIDASI DATA
     required_fields = ['session_token', 'word_id', 'user_answer', 'correct', 'response_time']
     for field in required_fields:
         if field not in data:
+            logger.error(f"❌ Missing required field: {field}")
             return jsonify({
                 "error": f"Missing field: {field}",
                 "received": data
             }), 400
+
+    logger.info(f"✅ All required fields present: {required_fields}")
 
     conn = get_db()
     cursor = conn.cursor()
 
     try:
         # CEK: apakah session_token valid?
+        logger.info(f"🔍 Checking if session_token exists: {data['session_token']}")
         cursor.execute('SELECT 1 FROM learning_sessions WHERE session_token = ?',
                       (data['session_token'],))
-        if not cursor.fetchone():
+        session_exists = cursor.fetchone()
+        if not session_exists:
+            logger.error(f"❌ Invalid session_token: {data['session_token']}")
             return jsonify({"error": "Invalid session_token"}), 400
+        logger.info(f"✅ Session token is valid")
+
+        # CEK: apakah word_id valid?
+        logger.info(f"🔍 Checking if word_id exists: {data['word_id']}")
+        cursor.execute('SELECT 1 FROM words WHERE id = ?', (data['word_id'],))
+        word_exists = cursor.fetchone()
+        if not word_exists:
+            logger.error(f"❌ Invalid word_id: {data['word_id']}")
+            return jsonify({"error": "Invalid word_id"}), 400
+        logger.info(f"✅ Word ID is valid")
+
+        # Prepare data for insertion
+        session_token = data['session_token']
+        word_id = data['word_id']
+        user_answer = data['user_answer']
+        correct = bool(data['correct'])
+        response_time = float(data['response_time'])
+
+        logger.info(f"📝 Prepared data for insertion:")
+        logger.info(f"   - session_token: {session_token}")
+        logger.info(f"   - word_id: {word_id}")
+        logger.info(f"   - user_answer: {user_answer}")
+        logger.info(f"   - correct: {correct} (type: {type(correct)})")
+        logger.info(f"   - response_time: {response_time} (type: {type(response_time)})")
 
         # INSERT dengan error detail - menggunakan kolom 'timestamp' yang ada
-        cursor.execute('''
+        sql_query = '''
             INSERT INTO user_answers
             (session_token, word_id, user_answer, correct, response_time)
             VALUES (?, ?, ?, ?, ?)
-        ''', (
-            data['session_token'],
-            data['word_id'],
-            data['user_answer'],
-            bool(data['correct']),  # Convert to boolean
-            float(data['response_time'])  # Convert to float
-        ))
+        '''
+        params = (session_token, word_id, user_answer, correct, response_time)
 
+        logger.info(f"🗃️ Executing SQL query: {sql_query.strip()}")
+        logger.info(f"🗃️ With parameters: {params}")
+
+        cursor.execute(sql_query, params)
+        logger.info(f"✅ SQL execution successful")
+
+        # Commit transaction
+        logger.info(f"💾 Committing transaction...")
         conn.commit()
+        logger.info(f"✅ Transaction committed successfully")
+
+        answer_id = cursor.lastrowid
+        logger.info(f"🎯 Answer saved successfully with ID: {answer_id}")
+
         return jsonify({
             "status": "answer_saved",
-            "answer_id": cursor.lastrowid
+            "answer_id": answer_id
         })
 
-    except sqlite3.IntegrityError as e:
-        return jsonify({
-            "error": "Database integrity error",
-            "details": str(e),
-            "data_sent": data
-        }), 400
     except Exception as e:
+        logger.error(f"❌ Error during answer insertion: {str(e)}", exc_info=True)
+
+        # Try to determine the specific error type
+        error_type = type(e).__name__
+        logger.error(f"❌ Error type: {error_type}")
+
+        # Rollback transaction on error
+        try:
+            conn.rollback()
+            logger.info(f"🔄 Transaction rolled back due to error")
+        except Exception as rollback_error:
+            logger.error(f"❌ Failed to rollback transaction: {rollback_error}")
+
+        # Return detailed error response
         import traceback
         return jsonify({
-            "error": "Server error",
+            "error": "Database insertion failed",
+            "error_type": error_type,
             "details": str(e),
+            "data_sent": data,
             "traceback": traceback.format_exc()
         }), 500
     finally:
         conn.close()
+        logger.info(f"🔌 Database connection closed")
 
 if __name__ == '__main__':
     import os
