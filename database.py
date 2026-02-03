@@ -122,7 +122,7 @@ class SimpleDatabase:
             SELECT w.* FROM words w
             LEFT JOIN reviews r ON w.id = r.word_id
             WHERE r.next_review_date IS NULL
-               OR r.next_review_date <= datetime('now')
+               OR r.next_review_date <= CURRENT_TIMESTAMP
             ORDER BY r.next_review_date ASC
         ''')
         return cursor.fetchall()

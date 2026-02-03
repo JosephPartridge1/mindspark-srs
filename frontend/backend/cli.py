@@ -2,6 +2,7 @@ import sqlite3
 from datetime import date
 from review_scheduler import SRSAlgorithm, load_due_vocabulary, simulate_learning_curve
 from visualization import plot_review_schedule, plot_retention_curve, generate_report
+from database_adapter import db_adapter
 
 DATABASE = "vocabulary_app.db"
 
@@ -122,22 +123,17 @@ def start_review_session(user_id):
         # Update database
         update_review_session(user_id, vocab['vocab_id'], result, quality, new_repetition_count)
 
-def update_review_session(user_id, vocab_id, result, quality):
-    conn = sqlite3.connect(DATABASE)
-    cursor = conn.cursor()
-    cursor.execute('''
-        INSERT OR REPLACE INTO review_sessions
-        (user_id, vocab_id, review_date, next_review_date, interval_days, ease_factor, performance_score, repetition_count)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-    ''', (
-        user_id, vocab_id, date.today().isoformat(), result['next_review_date'],
-        result['new_interval'], result['new_ease'], quality,
-        # Need to calculate repetition_count, but for simplicity, assume it's updated in SRSAlgorithm, but since it's not returned, let's add it
-        # Actually, SRSAlgorithm doesn't return repetition_count, so I need to adjust
-        0  # Placeholder, need to fix
-    ))
-    conn.commit()
-    conn.close()
+def update_review_session(user_id, vocab_id, result, quality, repetition_count=0):
+    db_adapter.insert_or_replace('review_sessions', {
+        'user_id': user_id,
+        'vocab_id': vocab_id,
+        'review_date': date.today().isoformat(),
+        'next_review_date': result['next_review_date'],
+        'interval_days': result['new_interval'],
+        'ease_factor': result['new_ease'],
+        'performance_score': quality,
+        'repetition_count': repetition_count
+    }, ['user_id', 'vocab_id'])
 
 def view_statistics(user_id):
     conn = sqlite3.connect(DATABASE)

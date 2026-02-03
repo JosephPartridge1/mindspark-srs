@@ -67,6 +67,8 @@ class DatabaseAdapter:
             # Handle boolean conversions in INSERT/UPDATE
             sql = sql.replace('TRUE', 'true')
             sql = sql.replace('FALSE', 'false')
+            # Handle datetime functions
+            sql = sql.replace("datetime('now')", 'NOW()')
         return sql
 
     def adapt_params(self, params: Tuple) -> Tuple:
@@ -154,6 +156,66 @@ class DatabaseAdapter:
     def get_db_type(self) -> str:
         """Get current database type"""
         return 'postgresql' if self.is_postgresql else 'sqlite'
+
+    def insert_or_ignore(self, table: str, data: dict, conflict_column: str = 'id'):
+        """
+        Insert data, ignoring if conflict occurs on specified column.
+        Compatible with both SQLite and PostgreSQL.
+        """
+        if not data:
+            return
+
+        columns = ', '.join(data.keys())
+        placeholders = ', '.join(['%s' if self.is_postgresql else '?' for _ in data])
+
+        if self.is_postgresql:
+            # PostgreSQL: ON CONFLICT DO NOTHING
+            sql = f"""
+                INSERT INTO {table} ({columns})
+                VALUES ({placeholders})
+                ON CONFLICT ({conflict_column}) DO NOTHING
+            """
+        else:
+            # SQLite: INSERT OR IGNORE
+            sql = f"""
+                INSERT OR IGNORE INTO {table} ({columns})
+                VALUES ({placeholders})
+            """
+
+        params = tuple(data.values())
+        cursor = self.execute(sql, params)
+        return cursor
+
+    def insert_or_replace(self, table: str, data: dict, conflict_columns: List[str]):
+        """
+        Insert data, replacing if conflict occurs on specified columns.
+        Compatible with both SQLite and PostgreSQL.
+        """
+        if not data:
+            return
+
+        columns = ', '.join(data.keys())
+        placeholders = ', '.join(['%s' if self.is_postgresql else '?' for _ in data])
+
+        if self.is_postgresql:
+            # PostgreSQL: ON CONFLICT DO UPDATE
+            update_columns = ', '.join([f"{col} = EXCLUDED.{col}" for col in data.keys()])
+            conflict_cols = ', '.join(conflict_columns)
+            sql = f"""
+                INSERT INTO {table} ({columns})
+                VALUES ({placeholders})
+                ON CONFLICT ({conflict_cols}) DO UPDATE SET {update_columns}
+            """
+        else:
+            # SQLite: INSERT OR REPLACE
+            sql = f"""
+                INSERT OR REPLACE INTO {table} ({columns})
+                VALUES ({placeholders})
+            """
+
+        params = tuple(data.values())
+        cursor = self.execute(sql, params)
+        return cursor
 
 # Global adapter instance
 db_adapter = DatabaseAdapter()

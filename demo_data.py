@@ -1,87 +1,93 @@
-import sqlite3
 from datetime import date, timedelta
+from database_adapter import db_adapter
 
-def create_demo_data(db_path='vocab.db'):
+def create_demo_data():
     """
-    Buat data sample untuk testing
+    Buat data sample untuk testing using database adapter
     """
-    conn = sqlite3.connect(db_path)
-    cursor = conn.cursor()
+    try:
+        # Insert sample users
+        users = [
+            {'username': 'alice', 'created_date': date.today().isoformat()},
+            {'username': 'bob', 'created_date': date.today().isoformat()},
+        ]
 
-    # Insert sample users
-    users = [
-        ('alice', date.today().isoformat()),
-        ('bob', date.today().isoformat()),
-    ]
+        for user in users:
+            db_adapter.insert_or_ignore('users', user, 'username')
 
-    cursor.executemany('INSERT OR IGNORE INTO users (username, created_date) VALUES (?, ?)', users)
+        # Insert sample vocabulary
+        vocab = [
+            {'english_word': 'apple', 'indonesian_meaning': 'apel', 'part_of_speech': 'noun', 'example_sentence': 'I eat an apple every day.', 'difficulty_score': 1.0},
+            {'english_word': 'banana', 'indonesian_meaning': 'pisang', 'part_of_speech': 'noun', 'example_sentence': 'Bananas are yellow.', 'difficulty_score': 1.2},
+            {'english_word': 'cherry', 'indonesian_meaning': 'ceri', 'part_of_speech': 'noun', 'example_sentence': 'Cherries are red.', 'difficulty_score': 1.5},
+            {'english_word': 'date', 'indonesian_meaning': 'kurma', 'part_of_speech': 'noun', 'example_sentence': 'Dates are sweet.', 'difficulty_score': 1.3},
+            {'english_word': 'elderberry', 'indonesian_meaning': 'buah elder', 'part_of_speech': 'noun', 'example_sentence': 'Elderberries are dark.', 'difficulty_score': 2.0},
+            {'english_word': 'fig', 'indonesian_meaning': 'buah ara', 'part_of_speech': 'noun', 'example_sentence': 'Figs are delicious.', 'difficulty_score': 1.8},
+            {'english_word': 'grape', 'indonesian_meaning': 'anggur', 'part_of_speech': 'noun', 'example_sentence': 'Grapes grow on vines.', 'difficulty_score': 1.1},
+            {'english_word': 'house', 'indonesian_meaning': 'rumah', 'part_of_speech': 'noun', 'example_sentence': 'The house is big.', 'difficulty_score': 1.0},
+            {'english_word': 'run', 'indonesian_meaning': 'lari', 'part_of_speech': 'verb', 'example_sentence': 'He runs fast.', 'difficulty_score': 1.4},
+            {'english_word': 'eat', 'indonesian_meaning': 'makan', 'part_of_speech': 'verb', 'example_sentence': 'I eat breakfast.', 'difficulty_score': 1.2},
+        ]
 
-    # Insert sample vocabulary
-    vocab = [
-        ('apple', 'apel', 'noun', 'I eat an apple every day.', 1.0),
-        ('banana', 'pisang', 'noun', 'Bananas are yellow.', 1.2),
-        ('cherry', 'ceri', 'noun', 'Cherries are red.', 1.5),
-        ('date', 'kurma', 'noun', 'Dates are sweet.', 1.3),
-        ('elderberry', 'buah elder', 'noun', 'Elderberries are dark.', 2.0),
-        ('fig', 'buah ara', 'noun', 'Figs are delicious.', 1.8),
-        ('grape', 'anggur', 'noun', 'Grapes grow on vines.', 1.1),
-        ('house', 'rumah', 'noun', 'The house is big.', 1.0),
-        ('run', 'lari', 'verb', 'He runs fast.', 1.4),
-        ('eat', 'makan', 'verb', 'I eat breakfast.', 1.2),
-    ]
+        for v in vocab:
+            db_adapter.insert_or_ignore('vocabulary', v, 'english_word')
 
-    cursor.executemany('''
-        INSERT OR IGNORE INTO vocabulary
-        (english_word, indonesian_meaning, part_of_speech, example_sentence, difficulty_score)
-        VALUES (?, ?, ?, ?, ?)
-    ''', vocab)
+        # Get user IDs
+        cursor = db_adapter.execute("SELECT id FROM users WHERE username = 'alice'")
+        alice_id = db_adapter.fetchone(cursor)['id']
 
-    # Get user IDs
-    cursor.execute('SELECT id FROM users WHERE username = ?', ('alice',))
-    alice_id = cursor.fetchone()[0]
+        cursor = db_adapter.execute("SELECT id FROM users WHERE username = 'bob'")
+        bob_id = db_adapter.fetchone(cursor)['id']
 
-    cursor.execute('SELECT id FROM users WHERE username = ?', ('bob',))
-    bob_id = cursor.fetchone()[0]
+        # Insert sample review sessions
+        today = date.today()
+        reviews = []
 
-    # Insert sample review sessions
-    today = date.today()
-    reviews = []
+        # Alice's reviews
+        for i, word in enumerate(['apple', 'banana', 'cherry']):
+            cursor = db_adapter.execute('SELECT id FROM vocabulary WHERE english_word = ?', (word,))
+            vocab_id = db_adapter.fetchone(cursor)['id']
 
-    # Alice's reviews
-    for i, word in enumerate(['apple', 'banana', 'cherry']):
-        cursor.execute('SELECT id FROM vocabulary WHERE english_word = ?', (word,))
-        vocab_id = cursor.fetchone()[0]
+            review_date = today - timedelta(days=i*2)
+            next_review = today + timedelta(days=1 + i)
+            reviews.append({
+                'user_id': alice_id,
+                'vocab_id': vocab_id,
+                'review_date': review_date.isoformat(),
+                'next_review_date': next_review.isoformat(),
+                'interval_days': 1 + i,
+                'ease_factor': 2.5,
+                'performance_score': 4,
+                'repetition_count': i+1
+            })
 
-        review_date = today - timedelta(days=i*2)
-        next_review = today + timedelta(days=1 + i)
-        reviews.append((alice_id, vocab_id, review_date.isoformat(), next_review.isoformat(), 1 + i, 2.5, 4, i+1))
+        # Bob's reviews
+        for i, word in enumerate(['date', 'elderberry']):
+            cursor = db_adapter.execute('SELECT id FROM vocabulary WHERE english_word = ?', (word,))
+            vocab_id = db_adapter.fetchone(cursor)['id']
 
-    # Bob's reviews
-    for i, word in enumerate(['date', 'elderberry']):
-        cursor.execute('SELECT id FROM vocabulary WHERE english_word = ?', (word,))
-        vocab_id = cursor.fetchone()[0]
+            review_date = today - timedelta(days=i*3)
+            next_review = today + timedelta(days=2 + i)
+            reviews.append({
+                'user_id': bob_id,
+                'vocab_id': vocab_id,
+                'review_date': review_date.isoformat(),
+                'next_review_date': next_review.isoformat(),
+                'interval_days': 2 + i,
+                'ease_factor': 2.3,
+                'performance_score': 3,
+                'repetition_count': i+1
+            })
 
-        review_date = today - timedelta(days=i*3)
-        next_review = today + timedelta(days=2 + i)
-        reviews.append((bob_id, vocab_id, review_date.isoformat(), next_review.isoformat(), 2 + i, 2.3, 3, i+1))
+        for review in reviews:
+            db_adapter.insert_or_ignore('review_sessions', review, 'id')
 
-    cursor.executemany('''
-        INSERT OR IGNORE INTO review_sessions
-        (user_id, vocab_id, review_date, next_review_date, interval_days, ease_factor, performance_score, repetition_count)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-    ''', reviews)
+        db_adapter.commit()
+        print("Demo data created successfully.")
 
-    conn.commit()
-    conn.close()
-    print("Demo data created successfully.")
+    except Exception as e:
+        print(f"Error creating demo data: {e}")
+        db_adapter.close()
 
 if __name__ == "__main__":
-    try:
-        # Coba import dari direktori saat ini
-        from database import DatabaseManager
-    except ImportError:
-        # Jika gagal, coba relative import
-        from .database import DatabaseManager
-    db_manager = DatabaseManager()
-    db_manager.create_tables()
     create_demo_data()
