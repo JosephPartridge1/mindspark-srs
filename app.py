@@ -86,7 +86,19 @@ def get_db():
     """Lazy database connection with full resilience"""
     if 'db' not in g:
         logger.info("🔌 Establishing database connection...")
-        g.db = get_resilient_connection()
+
+        # Simple DATABASE_URL check for Railway PostgreSQL
+        database_url = os.environ.get('DATABASE_URL')
+        if database_url:
+            try:
+                import psycopg2
+                g.db = psycopg2.connect(database_url, sslmode='require')
+                logger.info("✅ Connected to PostgreSQL (Railway)")
+            except Exception as e:
+                logger.warning(f"❌ PostgreSQL connection failed: {e}, falling back to resilient connection")
+                g.db = get_resilient_connection()
+        else:
+            g.db = get_resilient_connection()
 
         # Initialize database if needed (lazy initialization)
         _ensure_database_initialized(g.db)
@@ -260,6 +272,48 @@ def api_action():
         cursor.execute('''
             SELECT ease_factor, interval_days, repetition_count
             FROM reviews
+            WHERE word_id = %s
+            ORDER BY review_date DESC
+            LIMIT 1
+        ''' if db_adapter.is_postgresql else '''
+            SELECT ease_factor, interval_days, repetition_count
+            FROM reviews
+            WHERE word_id = %s
+            ORDER BY review_date DESC
+            LIMIT 1
+        ''' if db_adapter.is_postgresql else '''
+            SELECT ease_factor, interval_days, repetition_count
+            FROM reviews
+            WHERE word_id = %s
+            ORDER BY review_date DESC
+            LIMIT 1
+        ''' if db_adapter.is_postgresql else '''
+            SELECT ease_factor, interval_days, repetition_count
+            FROM reviews
+            WHERE word_id = %s
+            ORDER BY review_date DESC
+            LIMIT 1
+        ''' if db_adapter.is_postgresql else '''
+            SELECT ease_factor, interval_days, repetition_count
+            FROM reviews
+            WHERE word_id = %s
+            ORDER BY review_date DESC
+            LIMIT 1
+        ''' if db_adapter.is_postgresql else '''
+            SELECT ease_factor, interval_days, repetition_count
+            FROM reviews
+            WHERE word_id = %s
+            ORDER BY review_date DESC
+            LIMIT 1
+        ''' if db_adapter.is_postgresql else '''
+            SELECT ease_factor, interval_days, repetition_count
+            FROM reviews
+            WHERE word_id = %s
+            ORDER BY review_date DESC
+            LIMIT 1
+        ''' if db_adapter.is_postgresql else '''
+            SELECT ease_factor, interval_days, repetition_count
+            FROM reviews
             WHERE word_id = ?
             ORDER BY review_date DESC
             LIMIT 1
@@ -276,6 +330,27 @@ def api_action():
         # Update database with new review
         next_date = datetime.now() + timedelta(days=result['new_interval'])
         cursor.execute('''
+            INSERT INTO reviews (word_id, score, next_review_date, interval_days, ease_factor, repetition_count)
+            VALUES (%s, %s, %s, %s, %s, %s)
+        ''' if db_adapter.is_postgresql else '''
+            INSERT INTO reviews (word_id, score, next_review_date, interval_days, ease_factor, repetition_count)
+            VALUES (%s, %s, %s, %s, %s, %s)
+        ''' if db_adapter.is_postgresql else '''
+            INSERT INTO reviews (word_id, score, next_review_date, interval_days, ease_factor, repetition_count)
+            VALUES (%s, %s, %s, %s, %s, %s)
+        ''' if db_adapter.is_postgresql else '''
+            INSERT INTO reviews (word_id, score, next_review_date, interval_days, ease_factor, repetition_count)
+            VALUES (%s, %s, %s, %s, %s, %s)
+        ''' if db_adapter.is_postgresql else '''
+            INSERT INTO reviews (word_id, score, next_review_date, interval_days, ease_factor, repetition_count)
+            VALUES (%s, %s, ?, ?, ?, ?)
+        ''' if db_adapter.is_postgresql else '''
+            INSERT INTO reviews (word_id, score, next_review_date, interval_days, ease_factor, repetition_count)
+            VALUES (?, ?, ?, ?, ?, ?)
+        ''' if db_adapter.is_postgresql else '''
+            INSERT INTO reviews (word_id, score, next_review_date, interval_days, ease_factor, repetition_count)
+            VALUES (%s, ?, ?, ?, ?, ?)
+        ''' if db_adapter.is_postgresql else '''
             INSERT INTO reviews (word_id, score, next_review_date, interval_days, ease_factor, repetition_count)
             VALUES (?, ?, ?, ?, ?, ?)
         ''', (vocab_id, quality_response, next_date, result['new_interval'], result['new_ease'], result['new_repetition_count']))
@@ -347,6 +422,90 @@ def start_session():
                    r.next_review_date, r.ease_factor, r.interval_days, r.repetition_count
             FROM words w
             LEFT JOIN reviews r ON w.id = r.word_id
+            WHERE r.next_review_date IS NULL OR r.next_review_date <= %s
+            ORDER BY
+                CASE WHEN r.next_review_date < %s THEN 0 ELSE 1 END,
+                r.next_review_date ASC,
+                w.difficulty_score DESC,
+                r.ease_factor ASC
+            LIMIT %s
+        ''' if db_adapter.is_postgresql else '''
+            SELECT w.id, w.english, w.indonesian, w.part_of_speech, w.example_sentence, w.difficulty_score,
+                   r.next_review_date, r.ease_factor, r.interval_days, r.repetition_count
+            FROM words w
+            LEFT JOIN reviews r ON w.id = r.word_id
+            WHERE r.next_review_date IS NULL OR r.next_review_date <= %s
+            ORDER BY
+                CASE WHEN r.next_review_date < %s THEN 0 ELSE 1 END,
+                r.next_review_date ASC,
+                w.difficulty_score DESC,
+                r.ease_factor ASC
+            LIMIT %s
+        ''' if db_adapter.is_postgresql else '''
+            SELECT w.id, w.english, w.indonesian, w.part_of_speech, w.example_sentence, w.difficulty_score,
+                   r.next_review_date, r.ease_factor, r.interval_days, r.repetition_count
+            FROM words w
+            LEFT JOIN reviews r ON w.id = r.word_id
+            WHERE r.next_review_date IS NULL OR r.next_review_date <= %s
+            ORDER BY
+                CASE WHEN r.next_review_date < %s THEN 0 ELSE 1 END,
+                r.next_review_date ASC,
+                w.difficulty_score DESC,
+                r.ease_factor ASC
+            LIMIT %s
+        ''' if db_adapter.is_postgresql else '''
+            SELECT w.id, w.english, w.indonesian, w.part_of_speech, w.example_sentence, w.difficulty_score,
+                   r.next_review_date, r.ease_factor, r.interval_days, r.repetition_count
+            FROM words w
+            LEFT JOIN reviews r ON w.id = r.word_id
+            WHERE r.next_review_date IS NULL OR r.next_review_date <= %s
+            ORDER BY
+                CASE WHEN r.next_review_date < %s THEN 0 ELSE 1 END,
+                r.next_review_date ASC,
+                w.difficulty_score DESC,
+                r.ease_factor ASC
+            LIMIT %s
+        ''' if db_adapter.is_postgresql else '''
+            SELECT w.id, w.english, w.indonesian, w.part_of_speech, w.example_sentence, w.difficulty_score,
+                   r.next_review_date, r.ease_factor, r.interval_days, r.repetition_count
+            FROM words w
+            LEFT JOIN reviews r ON w.id = r.word_id
+            WHERE r.next_review_date IS NULL OR r.next_review_date <= %s
+            ORDER BY
+                CASE WHEN r.next_review_date < %s THEN 0 ELSE 1 END,
+                r.next_review_date ASC,
+                w.difficulty_score DESC,
+                r.ease_factor ASC
+            LIMIT ?
+        ''' if db_adapter.is_postgresql else '''
+            SELECT w.id, w.english, w.indonesian, w.part_of_speech, w.example_sentence, w.difficulty_score,
+                   r.next_review_date, r.ease_factor, r.interval_days, r.repetition_count
+            FROM words w
+            LEFT JOIN reviews r ON w.id = r.word_id
+            WHERE r.next_review_date IS NULL OR r.next_review_date <= ?
+            ORDER BY
+                CASE WHEN r.next_review_date < ? THEN 0 ELSE 1 END,
+                r.next_review_date ASC,
+                w.difficulty_score DESC,
+                r.ease_factor ASC
+            LIMIT ?
+        ''' if db_adapter.is_postgresql else '''
+            SELECT w.id, w.english, w.indonesian, w.part_of_speech, w.example_sentence, w.difficulty_score,
+                   r.next_review_date, r.ease_factor, r.interval_days, r.repetition_count
+            FROM words w
+            LEFT JOIN reviews r ON w.id = r.word_id
+            WHERE r.next_review_date IS NULL OR r.next_review_date <= %s
+            ORDER BY
+                CASE WHEN r.next_review_date < ? THEN 0 ELSE 1 END,
+                r.next_review_date ASC,
+                w.difficulty_score DESC,
+                r.ease_factor ASC
+            LIMIT ?
+        ''' if db_adapter.is_postgresql else '''
+            SELECT w.id, w.english, w.indonesian, w.part_of_speech, w.example_sentence, w.difficulty_score,
+                   r.next_review_date, r.ease_factor, r.interval_days, r.repetition_count
+            FROM words w
+            LEFT JOIN reviews r ON w.id = r.word_id
             WHERE r.next_review_date IS NULL OR r.next_review_date <= ?
             ORDER BY
                 CASE WHEN r.next_review_date < ? THEN 0 ELSE 1 END,
@@ -410,6 +569,48 @@ def submit_answer():
         cursor.execute('''
             SELECT ease_factor, interval_days, repetition_count
             FROM reviews
+            WHERE word_id = %s
+            ORDER BY review_date DESC
+            LIMIT 1
+        ''' if db_adapter.is_postgresql else '''
+            SELECT ease_factor, interval_days, repetition_count
+            FROM reviews
+            WHERE word_id = %s
+            ORDER BY review_date DESC
+            LIMIT 1
+        ''' if db_adapter.is_postgresql else '''
+            SELECT ease_factor, interval_days, repetition_count
+            FROM reviews
+            WHERE word_id = %s
+            ORDER BY review_date DESC
+            LIMIT 1
+        ''' if db_adapter.is_postgresql else '''
+            SELECT ease_factor, interval_days, repetition_count
+            FROM reviews
+            WHERE word_id = %s
+            ORDER BY review_date DESC
+            LIMIT 1
+        ''' if db_adapter.is_postgresql else '''
+            SELECT ease_factor, interval_days, repetition_count
+            FROM reviews
+            WHERE word_id = %s
+            ORDER BY review_date DESC
+            LIMIT 1
+        ''' if db_adapter.is_postgresql else '''
+            SELECT ease_factor, interval_days, repetition_count
+            FROM reviews
+            WHERE word_id = %s
+            ORDER BY review_date DESC
+            LIMIT 1
+        ''' if db_adapter.is_postgresql else '''
+            SELECT ease_factor, interval_days, repetition_count
+            FROM reviews
+            WHERE word_id = %s
+            ORDER BY review_date DESC
+            LIMIT 1
+        ''' if db_adapter.is_postgresql else '''
+            SELECT ease_factor, interval_days, repetition_count
+            FROM reviews
             WHERE word_id = ?
             ORDER BY review_date DESC
             LIMIT 1
@@ -426,6 +627,27 @@ def submit_answer():
         # Update database
         next_date = datetime.now() + timedelta(days=result['new_interval'])
         cursor.execute('''
+            INSERT INTO reviews (word_id, score, next_review_date, interval_days, ease_factor, repetition_count)
+            VALUES (%s, %s, %s, %s, %s, %s)
+        ''' if db_adapter.is_postgresql else '''
+            INSERT INTO reviews (word_id, score, next_review_date, interval_days, ease_factor, repetition_count)
+            VALUES (%s, %s, %s, %s, %s, %s)
+        ''' if db_adapter.is_postgresql else '''
+            INSERT INTO reviews (word_id, score, next_review_date, interval_days, ease_factor, repetition_count)
+            VALUES (%s, %s, %s, %s, %s, %s)
+        ''' if db_adapter.is_postgresql else '''
+            INSERT INTO reviews (word_id, score, next_review_date, interval_days, ease_factor, repetition_count)
+            VALUES (%s, %s, %s, %s, %s, %s)
+        ''' if db_adapter.is_postgresql else '''
+            INSERT INTO reviews (word_id, score, next_review_date, interval_days, ease_factor, repetition_count)
+            VALUES (%s, %s, ?, ?, ?, ?)
+        ''' if db_adapter.is_postgresql else '''
+            INSERT INTO reviews (word_id, score, next_review_date, interval_days, ease_factor, repetition_count)
+            VALUES (?, ?, ?, ?, ?, ?)
+        ''' if db_adapter.is_postgresql else '''
+            INSERT INTO reviews (word_id, score, next_review_date, interval_days, ease_factor, repetition_count)
+            VALUES (%s, ?, ?, ?, ?, ?)
+        ''' if db_adapter.is_postgresql else '''
             INSERT INTO reviews (word_id, score, next_review_date, interval_days, ease_factor, repetition_count)
             VALUES (?, ?, ?, ?, ?, ?)
         ''', (item_id, srs_score, next_date, result['new_interval'], result['new_ease'], result['new_repetition_count']))
@@ -445,6 +667,55 @@ def get_learn():
 
         today = datetime.now().date().isoformat()
         cursor.execute('''
+            SELECT w.id, w.english, w.indonesian, w.part_of_speech, w.example_sentence
+            FROM words w
+            LEFT JOIN reviews r ON w.id = r.word_id
+            WHERE r.next_review_date IS NULL OR r.next_review_date <= %s
+            ORDER BY r.next_review_date ASC
+            LIMIT 10
+        ''' if db_adapter.is_postgresql else '''
+            SELECT w.id, w.english, w.indonesian, w.part_of_speech, w.example_sentence
+            FROM words w
+            LEFT JOIN reviews r ON w.id = r.word_id
+            WHERE r.next_review_date IS NULL OR r.next_review_date <= %s
+            ORDER BY r.next_review_date ASC
+            LIMIT 10
+        ''' if db_adapter.is_postgresql else '''
+            SELECT w.id, w.english, w.indonesian, w.part_of_speech, w.example_sentence
+            FROM words w
+            LEFT JOIN reviews r ON w.id = r.word_id
+            WHERE r.next_review_date IS NULL OR r.next_review_date <= %s
+            ORDER BY r.next_review_date ASC
+            LIMIT 10
+        ''' if db_adapter.is_postgresql else '''
+            SELECT w.id, w.english, w.indonesian, w.part_of_speech, w.example_sentence
+            FROM words w
+            LEFT JOIN reviews r ON w.id = r.word_id
+            WHERE r.next_review_date IS NULL OR r.next_review_date <= %s
+            ORDER BY r.next_review_date ASC
+            LIMIT 10
+        ''' if db_adapter.is_postgresql else '''
+            SELECT w.id, w.english, w.indonesian, w.part_of_speech, w.example_sentence
+            FROM words w
+            LEFT JOIN reviews r ON w.id = r.word_id
+            WHERE r.next_review_date IS NULL OR r.next_review_date <= %s
+            ORDER BY r.next_review_date ASC
+            LIMIT 10
+        ''' if db_adapter.is_postgresql else '''
+            SELECT w.id, w.english, w.indonesian, w.part_of_speech, w.example_sentence
+            FROM words w
+            LEFT JOIN reviews r ON w.id = r.word_id
+            WHERE r.next_review_date IS NULL OR r.next_review_date <= %s
+            ORDER BY r.next_review_date ASC
+            LIMIT 10
+        ''' if db_adapter.is_postgresql else '''
+            SELECT w.id, w.english, w.indonesian, w.part_of_speech, w.example_sentence
+            FROM words w
+            LEFT JOIN reviews r ON w.id = r.word_id
+            WHERE r.next_review_date IS NULL OR r.next_review_date <= %s
+            ORDER BY r.next_review_date ASC
+            LIMIT 10
+        ''' if db_adapter.is_postgresql else '''
             SELECT w.id, w.english, w.indonesian, w.part_of_speech, w.example_sentence
             FROM words w
             LEFT JOIN reviews r ON w.id = r.word_id
@@ -490,6 +761,48 @@ def post_review():
         cursor.execute('''
             SELECT ease_factor, interval_days, repetition_count
             FROM reviews
+            WHERE word_id = %s
+            ORDER BY review_date DESC
+            LIMIT 1
+        ''' if db_adapter.is_postgresql else '''
+            SELECT ease_factor, interval_days, repetition_count
+            FROM reviews
+            WHERE word_id = %s
+            ORDER BY review_date DESC
+            LIMIT 1
+        ''' if db_adapter.is_postgresql else '''
+            SELECT ease_factor, interval_days, repetition_count
+            FROM reviews
+            WHERE word_id = %s
+            ORDER BY review_date DESC
+            LIMIT 1
+        ''' if db_adapter.is_postgresql else '''
+            SELECT ease_factor, interval_days, repetition_count
+            FROM reviews
+            WHERE word_id = %s
+            ORDER BY review_date DESC
+            LIMIT 1
+        ''' if db_adapter.is_postgresql else '''
+            SELECT ease_factor, interval_days, repetition_count
+            FROM reviews
+            WHERE word_id = %s
+            ORDER BY review_date DESC
+            LIMIT 1
+        ''' if db_adapter.is_postgresql else '''
+            SELECT ease_factor, interval_days, repetition_count
+            FROM reviews
+            WHERE word_id = %s
+            ORDER BY review_date DESC
+            LIMIT 1
+        ''' if db_adapter.is_postgresql else '''
+            SELECT ease_factor, interval_days, repetition_count
+            FROM reviews
+            WHERE word_id = %s
+            ORDER BY review_date DESC
+            LIMIT 1
+        ''' if db_adapter.is_postgresql else '''
+            SELECT ease_factor, interval_days, repetition_count
+            FROM reviews
             WHERE word_id = ?
             ORDER BY review_date DESC
             LIMIT 1
@@ -506,6 +819,27 @@ def post_review():
         # Update database
         next_date = datetime.now() + timedelta(days=result['new_interval'])
         cursor.execute('''
+            INSERT INTO reviews (word_id, score, next_review_date, interval_days, ease_factor, repetition_count)
+            VALUES (%s, %s, %s, %s, %s, %s)
+        ''' if db_adapter.is_postgresql else '''
+            INSERT INTO reviews (word_id, score, next_review_date, interval_days, ease_factor, repetition_count)
+            VALUES (%s, %s, %s, %s, %s, %s)
+        ''' if db_adapter.is_postgresql else '''
+            INSERT INTO reviews (word_id, score, next_review_date, interval_days, ease_factor, repetition_count)
+            VALUES (%s, %s, %s, %s, %s, %s)
+        ''' if db_adapter.is_postgresql else '''
+            INSERT INTO reviews (word_id, score, next_review_date, interval_days, ease_factor, repetition_count)
+            VALUES (%s, %s, %s, %s, %s, %s)
+        ''' if db_adapter.is_postgresql else '''
+            INSERT INTO reviews (word_id, score, next_review_date, interval_days, ease_factor, repetition_count)
+            VALUES (%s, %s, ?, ?, ?, ?)
+        ''' if db_adapter.is_postgresql else '''
+            INSERT INTO reviews (word_id, score, next_review_date, interval_days, ease_factor, repetition_count)
+            VALUES (?, ?, ?, ?, ?, ?)
+        ''' if db_adapter.is_postgresql else '''
+            INSERT INTO reviews (word_id, score, next_review_date, interval_days, ease_factor, repetition_count)
+            VALUES (%s, ?, ?, ?, ?, ?)
+        ''' if db_adapter.is_postgresql else '''
             INSERT INTO reviews (word_id, score, next_review_date, interval_days, ease_factor, repetition_count)
             VALUES (?, ?, ?, ?, ?, ?)
         ''', (word_id, score, next_date, result['new_interval'], result['new_ease'], result['new_repetition_count']))
@@ -553,6 +887,20 @@ def health_check():
             'timestamp': datetime.now().isoformat()
         }), 500
 
+
+
+@app.route('/api/health')
+def simple_health_check():
+    """Simple health check endpoint without database dependency"""
+    return jsonify({
+        'status': 'ok',
+        'message': 'Flask app is running',
+        'timestamp': datetime.now().isoformat(),
+        'environment': 'railway' if os.environ.get('RAILWAY_ENVIRONMENT') else 'local'
+    })
+
+
+
 @app.route('/api/health')
 def simple_health_check():
     """Simple health check endpoint without database dependency"""
@@ -575,6 +923,15 @@ def get_next_word():
 
         now = datetime.now()
         cursor.execute('''
+            SELECT w.id, w.english, w.indonesian, w.part_of_speech, w.example_sentence,
+                   w.interval, w.repetitions, w.ease_factor, w.next_review, w.streak
+            FROM words w
+            WHERE w.next_review IS NULL OR w.next_review <= %s
+            ORDER BY
+                CASE WHEN w.next_review IS NULL THEN 0 ELSE 1 END,
+                w.next_review ASC
+            LIMIT 1
+        ''' if db_adapter.is_postgresql else '''
             SELECT w.id, w.english, w.indonesian, w.part_of_speech, w.example_sentence,
                    w.interval, w.repetitions, w.ease_factor, w.next_review, w.streak
             FROM words w
@@ -628,7 +985,7 @@ def submit_answer_duolingo():
         cursor = conn.cursor()
 
         # Get word details
-        cursor.execute('SELECT english, indonesian, interval, repetitions, ease_factor, streak FROM words WHERE id = ?', (word_id,))
+        cursor.execute('SELECT english, indonesian, interval, repetitions, ease_factor, streak FROM words WHERE id = %s' if db_adapter.is_postgresql else 'SELECT english, indonesian, interval, repetitions, ease_factor, streak FROM words WHERE id = ?', (word_id,))
         word_row = cursor.fetchone()
         if not word_row:
             return jsonify({'error': 'Word not found'}), 404
@@ -655,6 +1012,83 @@ def submit_answer_duolingo():
 
         # Update word in database
         cursor.execute('''
+            UPDATE words
+            SET interval = %s, repetitions = %s, ease_factor = %s, next_review = %s,
+                last_reviewed = %s, streak = %s
+            WHERE id = %s
+        ''', (new_interval, new_repetitions, new_ease, next_review, datetime.now(), new_streak, word_id))
+
+        # Insert review record
+        cursor.execute('''
+            INSERT INTO reviews (word_id, correct, response_time, user_answer)
+            VALUES (%s, %s, %s, %s)
+        ''' if db_adapter.is_postgresql else '''
+            UPDATE words
+            SET interval = %s, repetitions = %s, ease_factor = %s, next_review = %s,
+                last_reviewed = %s, streak = %s
+            WHERE id = %s
+        ''', (new_interval, new_repetitions, new_ease, next_review, datetime.now(), new_streak, word_id))
+
+        # Insert review record
+        cursor.execute('''
+            INSERT INTO reviews (word_id, correct, response_time, user_answer)
+            VALUES (%s, %s, %s, %s)
+        ''' if db_adapter.is_postgresql else '''
+            UPDATE words
+            SET interval = %s, repetitions = %s, ease_factor = %s, next_review = %s,
+                last_reviewed = %s, streak = %s
+            WHERE id = %s
+        ''', (new_interval, new_repetitions, new_ease, next_review, datetime.now(), new_streak, word_id))
+
+        # Insert review record
+        cursor.execute('''
+            INSERT INTO reviews (word_id, correct, response_time, user_answer)
+            VALUES (%s, %s, %s, %s)
+        ''' if db_adapter.is_postgresql else '''
+            UPDATE words
+            SET interval = %s, repetitions = %s, ease_factor = %s, next_review = %s,
+                last_reviewed = %s, streak = %s
+            WHERE id = %s
+        ''', (new_interval, new_repetitions, new_ease, next_review, datetime.now(), new_streak, word_id))
+
+        # Insert review record
+        cursor.execute('''
+            INSERT INTO reviews (word_id, correct, response_time, user_answer)
+            VALUES (%s, %s, %s, %s)
+        ''' if db_adapter.is_postgresql else '''
+            UPDATE words
+            SET interval = %s, repetitions = %s, ease_factor = ?, next_review = ?,
+                last_reviewed = ?, streak = ?
+            WHERE id = ?
+        ''', (new_interval, new_repetitions, new_ease, next_review, datetime.now(), new_streak, word_id))
+
+        # Insert review record
+        cursor.execute('''
+            INSERT INTO reviews (word_id, correct, response_time, user_answer)
+            VALUES (?, ?, ?, ?)
+        ''' if db_adapter.is_postgresql else '''
+            UPDATE words
+            SET interval = ?, repetitions = ?, ease_factor = ?, next_review = ?,
+                last_reviewed = ?, streak = ?
+            WHERE id = ?
+        ''', (new_interval, new_repetitions, new_ease, next_review, datetime.now(), new_streak, word_id))
+
+        # Insert review record
+        cursor.execute('''
+            INSERT INTO reviews (word_id, correct, response_time, user_answer)
+            VALUES (?, ?, ?, ?)
+        ''' if db_adapter.is_postgresql else '''
+            UPDATE words
+            SET interval = %s, repetitions = ?, ease_factor = ?, next_review = ?,
+                last_reviewed = ?, streak = ?
+            WHERE id = ?
+        ''', (new_interval, new_repetitions, new_ease, next_review, datetime.now(), new_streak, word_id))
+
+        # Insert review record
+        cursor.execute('''
+            INSERT INTO reviews (word_id, correct, response_time, user_answer)
+            VALUES (?, ?, ?, ?)
+        ''' if db_adapter.is_postgresql else '''
             UPDATE words
             SET interval = ?, repetitions = ?, ease_factor = ?, next_review = ?,
                 last_reviewed = ?, streak = ?
@@ -701,6 +1135,27 @@ def get_due_count():
 
         now = datetime.now()
         cursor.execute('''
+            SELECT COUNT(*) FROM words
+            WHERE next_review IS NULL OR next_review <= %s
+        ''' if db_adapter.is_postgresql else '''
+            SELECT COUNT(*) FROM words
+            WHERE next_review IS NULL OR next_review <= %s
+        ''' if db_adapter.is_postgresql else '''
+            SELECT COUNT(*) FROM words
+            WHERE next_review IS NULL OR next_review <= %s
+        ''' if db_adapter.is_postgresql else '''
+            SELECT COUNT(*) FROM words
+            WHERE next_review IS NULL OR next_review <= %s
+        ''' if db_adapter.is_postgresql else '''
+            SELECT COUNT(*) FROM words
+            WHERE next_review IS NULL OR next_review <= %s
+        ''' if db_adapter.is_postgresql else '''
+            SELECT COUNT(*) FROM words
+            WHERE next_review IS NULL OR next_review <= %s
+        ''' if db_adapter.is_postgresql else '''
+            SELECT COUNT(*) FROM words
+            WHERE next_review IS NULL OR next_review <= %s
+        ''' if db_adapter.is_postgresql else '''
             SELECT COUNT(*) FROM words
             WHERE next_review IS NULL OR next_review <= ?
         ''', (now,))
@@ -758,6 +1213,1318 @@ def export_csv():
 
         # Export semua data
         cursor.execute('''
+            SELECT
+                ls.user_ip,
+                ls.start_time,
+                ls.end_time,
+                ls.total_questions,
+                ls.correct_answers,
+                ls.accuracy_rate,
+                wa.word_id,
+                wa.user_answer,
+                wa.correct,
+                wa.response_time
+            FROM learning_sessions ls
+            LEFT JOIN user_answers wa ON ls.session_token = wa.session_token
+            ORDER BY ls.end_time DESC
+        ''')
+        data = cursor.fetchall()
+        conn.close()
+
+        # Convert to CSV
+        output = io.StringIO()
+        writer = csv.writer(output)
+
+        # Header
+        writer.writerow(['User IP', 'Start Time', 'End Time', 'Total Questions',
+                         'Correct Answers', 'Accuracy', 'Word ID', 'User Answer',
+                         'Is Correct', 'Response Time (s)'])
+
+        # Data
+        for row in data:
+            writer.writerow(row)
+
+        return Response(
+            output.getvalue(),
+            mimetype="text/csv",
+            headers={"Content-disposition": "attachment; filename=learning_data.csv"}
+        )
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/admin')
+def admin_dashboard():
+    return render_template('admin.html')
+
+
+
+
+
+@app.route('/api/debug/test-insert')
+def debug_test_insert():
+    """Test insert data ke learning_sessions"""
+    conn = sqlite3.connect('srs_vocab.db', check_same_thread=False)
+    cursor = conn.cursor()
+
+    try:
+        # Coba insert test data
+        test_token = f"test_{int(datetime.now().timestamp())}"
+        cursor.execute('''
+            INSERT INTO learning_sessions
+            (session_token, start_time, total_questions, correct_answers, accuracy_rate)
+            VALUES (%s, %s, %s, %s, %s)
+        ''', (test_token, datetime.now().isoformat(), 10, 8, 80.0))
+
+        conn.commit()
+        conn.close()
+
+        return jsonify({
+            "status": "test_insert_ok",
+            "test_token": test_token
+        })
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@app.errorhandler(404)
+def api_not_found(e):
+    if request.path.startswith('/api'):
+        return jsonify({"error": "API endpoint not found", "path": request.path}), 404
+    return e
+
+import sqlite3
+import os
+from datetime import datetime
+
+@app.route('/api/debug/db')
+def debug_database():
+    """Check database status"""
+    try:
+        if not os.path.exists('srs_vocab.db'):
+            return jsonify({
+                "error": "Database file not found",
+                "status": "missing"
+            }), 404
+        
+        conn = sqlite3.connect('srs_vocab.db', check_same_thread=False)
+        cursor = conn.cursor()
+        
+        # Get tables
+        cursor.execute("SELECT name FROM sqlite_master WHERE type='table'")
+        tables = [row[0] for row in cursor.fetchall()]
+        
+        # Count rows
+        counts = {}
+        for table in tables:
+            cursor.execute(f"SELECT COUNT(*) FROM {table}")
+            counts[table] = cursor.fetchone()[0]
+        
+        conn.close()
+        
+        return jsonify({
+            "status": "ok",
+            "database": "srs_vocab.db",
+            "exists": True,
+            "tables": tables,
+            "row_counts": counts,
+            "timestamp": datetime.now().isoformat()
+        })
+        
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@app.route('/api/debug/test')
+def debug_test():
+    """Simple test endpoint"""
+    return jsonify({
+        "status": "ok",
+        "message": "Flask is running",
+        "time": datetime.now().isoformat()
+    })
+
+@app.route('/api/session/start', methods=['POST'])
+def session_start():
+    """Session start endpoint that creates a record in learning_sessions table"""
+    try:
+        data = request.get_json()
+        if not data:
+            return jsonify({"error": "No data provided"}), 400
+
+        session_token = data.get('session_token')
+        if not session_token:
+            # Generate a simple session token if not provided
+            import uuid
+            session_token = f"session_{uuid.uuid4().hex[:16]}"
+
+        # Insert session into database
+        conn = get_db()
+        cursor = conn.cursor()
+
+        try:
+            cursor.execute('''
+                INSERT INTO learning_sessions (session_token, start_time, user_ip, user_agent)
+                VALUES (?, ?, ?, ?)
+            ''', (
+                session_token,
+                datetime.now().isoformat(),
+                request.remote_addr,
+                request.headers.get('User-Agent', '')
+            ))
+            conn.commit()
+            logger.info(f"✅ Session created in database: {session_token}")
+
+        except Exception as insert_error:
+            logger.error(f"❌ Failed to insert session: {insert_error}")
+            conn.rollback()
+            return jsonify({"error": "Failed to create session in database"}), 500
+        finally:
+            conn.close()
+
+        return jsonify({
+            "status": "started",
+            "token": session_token,
+            "message": "Session initialized successfully"
+        })
+
+    except Exception as e:
+        logger.error(f"🔥 SESSION START ERROR: {e}", exc_info=True)
+        # Fallback: always return a session token even on error
+        import uuid
+        fallback_token = f"fallback_{uuid.uuid4().hex[:16]}"
+        return jsonify({
+            "status": "started",
+            "token": fallback_token,
+            "message": "Session initialized with fallback token",
+            "warning": "Database unavailable, using fallback mode"
+        })
+
+@app.route('/api/session/complete', methods=['POST'])
+def session_complete():
+    data = request.get_json()
+
+    # Validate required fields
+    required = ['session_token', 'total_questions', 'correct_answers', 'accuracy_rate']
+    for field in required:
+        if field not in data:
+            return jsonify({"error": f"Missing field: {field}"}), 400
+
+    conn = get_db()
+    cursor = conn.cursor()
+
+    try:
+        cursor.execute('''
+            UPDATE learning_sessions
+            SET end_time = CURRENT_TIMESTAMP,
+                total_questions = %s,
+                correct_answers = %s,
+                accuracy_rate = %s,
+                completed = 1
+            WHERE session_token = %s
+        ''' if db_adapter.is_postgresql else '''
+            SELECT
+                ls.user_ip,
+                ls.start_time,
+                ls.end_time,
+                ls.total_questions,
+                ls.correct_answers,
+                ls.accuracy_rate,
+                wa.word_id,
+                wa.user_answer,
+                wa.correct,
+                wa.response_time
+            FROM learning_sessions ls
+            LEFT JOIN user_answers wa ON ls.session_token = wa.session_token
+            ORDER BY ls.end_time DESC
+        ''')
+        data = cursor.fetchall()
+        conn.close()
+
+        # Convert to CSV
+        output = io.StringIO()
+        writer = csv.writer(output)
+
+        # Header
+        writer.writerow(['User IP', 'Start Time', 'End Time', 'Total Questions',
+                         'Correct Answers', 'Accuracy', 'Word ID', 'User Answer',
+                         'Is Correct', 'Response Time (s)'])
+
+        # Data
+        for row in data:
+            writer.writerow(row)
+
+        return Response(
+            output.getvalue(),
+            mimetype="text/csv",
+            headers={"Content-disposition": "attachment; filename=learning_data.csv"}
+        )
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/admin')
+def admin_dashboard():
+    return render_template('admin.html')
+
+
+
+
+
+@app.route('/api/debug/test-insert')
+def debug_test_insert():
+    """Test insert data ke learning_sessions"""
+    conn = sqlite3.connect('srs_vocab.db', check_same_thread=False)
+    cursor = conn.cursor()
+
+    try:
+        # Coba insert test data
+        test_token = f"test_{int(datetime.now().timestamp())}"
+        cursor.execute('''
+            INSERT INTO learning_sessions
+            (session_token, start_time, total_questions, correct_answers, accuracy_rate)
+            VALUES (%s, %s, %s, %s, %s)
+        ''', (test_token, datetime.now().isoformat(), 10, 8, 80.0))
+
+        conn.commit()
+        conn.close()
+
+        return jsonify({
+            "status": "test_insert_ok",
+            "test_token": test_token
+        })
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@app.errorhandler(404)
+def api_not_found(e):
+    if request.path.startswith('/api'):
+        return jsonify({"error": "API endpoint not found", "path": request.path}), 404
+    return e
+
+import sqlite3
+import os
+from datetime import datetime
+
+@app.route('/api/debug/db')
+def debug_database():
+    """Check database status"""
+    try:
+        if not os.path.exists('srs_vocab.db'):
+            return jsonify({
+                "error": "Database file not found",
+                "status": "missing"
+            }), 404
+        
+        conn = sqlite3.connect('srs_vocab.db', check_same_thread=False)
+        cursor = conn.cursor()
+        
+        # Get tables
+        cursor.execute("SELECT name FROM sqlite_master WHERE type='table'")
+        tables = [row[0] for row in cursor.fetchall()]
+        
+        # Count rows
+        counts = {}
+        for table in tables:
+            cursor.execute(f"SELECT COUNT(*) FROM {table}")
+            counts[table] = cursor.fetchone()[0]
+        
+        conn.close()
+        
+        return jsonify({
+            "status": "ok",
+            "database": "srs_vocab.db",
+            "exists": True,
+            "tables": tables,
+            "row_counts": counts,
+            "timestamp": datetime.now().isoformat()
+        })
+        
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@app.route('/api/debug/test')
+def debug_test():
+    """Simple test endpoint"""
+    return jsonify({
+        "status": "ok",
+        "message": "Flask is running",
+        "time": datetime.now().isoformat()
+    })
+
+@app.route('/api/session/start', methods=['POST'])
+def session_start():
+    """Basic session start endpoint that works without database"""
+    try:
+        data = request.get_json()
+        if not data:
+            return jsonify({"error": "No data provided"}), 400
+
+        session_token = data.get('session_token')
+        if not session_token:
+            # Generate a simple session token if not provided
+            import uuid
+            session_token = f"session_{uuid.uuid4().hex[:16]}"
+
+        return jsonify({
+            "status": "started",
+            "token": session_token,
+            "message": "Session initialized successfully"
+        })
+
+    except Exception as e:
+        # Fallback: always return a session token even on error
+        import uuid
+        fallback_token = f"fallback_{uuid.uuid4().hex[:16]}"
+        print(f"🔥 SESSION START ERROR: {e}", file=sys.stderr)
+        return jsonify({
+            "status": "started",
+            "token": fallback_token,
+            "message": "Session initialized with fallback token",
+            "warning": "Database unavailable, using fallback mode"
+        })
+
+@app.route('/api/session/complete', methods=['POST'])
+def session_complete():
+    data = request.get_json()
+
+    # Validate required fields
+    required = ['session_token', 'total_questions', 'correct_answers', 'accuracy_rate']
+    for field in required:
+        if field not in data:
+            return jsonify({"error": f"Missing field: {field}"}), 400
+
+    conn = get_db()
+    cursor = conn.cursor()
+
+    try:
+        cursor.execute('''
+            UPDATE learning_sessions
+            SET end_time = CURRENT_TIMESTAMP,
+                total_questions = %s,
+                correct_answers = %s,
+                accuracy_rate = %s,
+                completed = 1
+            WHERE session_token = %s
+        ''' if db_adapter.is_postgresql else '''
+            SELECT
+                ls.user_ip,
+                ls.start_time,
+                ls.end_time,
+                ls.total_questions,
+                ls.correct_answers,
+                ls.accuracy_rate,
+                wa.word_id,
+                wa.user_answer,
+                wa.correct,
+                wa.response_time
+            FROM learning_sessions ls
+            LEFT JOIN user_answers wa ON ls.session_token = wa.session_token
+            ORDER BY ls.end_time DESC
+        ''')
+        data = cursor.fetchall()
+        conn.close()
+
+        # Convert to CSV
+        output = io.StringIO()
+        writer = csv.writer(output)
+
+        # Header
+        writer.writerow(['User IP', 'Start Time', 'End Time', 'Total Questions',
+                         'Correct Answers', 'Accuracy', 'Word ID', 'User Answer',
+                         'Is Correct', 'Response Time (s)'])
+
+        # Data
+        for row in data:
+            writer.writerow(row)
+
+        return Response(
+            output.getvalue(),
+            mimetype="text/csv",
+            headers={"Content-disposition": "attachment; filename=learning_data.csv"}
+        )
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/admin')
+def admin_dashboard():
+    return render_template('admin.html')
+
+
+
+
+
+@app.route('/api/debug/test-insert')
+def debug_test_insert():
+    """Test insert data ke learning_sessions"""
+    conn = sqlite3.connect('srs_vocab.db', check_same_thread=False)
+    cursor = conn.cursor()
+
+    try:
+        # Coba insert test data
+        test_token = f"test_{int(datetime.now().timestamp())}"
+        cursor.execute('''
+            INSERT INTO learning_sessions
+            (session_token, start_time, total_questions, correct_answers, accuracy_rate)
+            VALUES (%s, %s, %s, %s, %s)
+        ''', (test_token, datetime.now().isoformat(), 10, 8, 80.0))
+
+        conn.commit()
+        conn.close()
+
+        return jsonify({
+            "status": "test_insert_ok",
+            "test_token": test_token
+        })
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@app.errorhandler(404)
+def api_not_found(e):
+    if request.path.startswith('/api'):
+        return jsonify({"error": "API endpoint not found", "path": request.path}), 404
+    return e
+
+import sqlite3
+import os
+from datetime import datetime
+
+@app.route('/api/debug/db')
+def debug_database():
+    """Check database status"""
+    try:
+        if not os.path.exists('srs_vocab.db'):
+            return jsonify({
+                "error": "Database file not found",
+                "status": "missing"
+            }), 404
+        
+        conn = sqlite3.connect('srs_vocab.db', check_same_thread=False)
+        cursor = conn.cursor()
+        
+        # Get tables
+        cursor.execute("SELECT name FROM sqlite_master WHERE type='table'")
+        tables = [row[0] for row in cursor.fetchall()]
+        
+        # Count rows
+        counts = {}
+        for table in tables:
+            cursor.execute(f"SELECT COUNT(*) FROM {table}")
+            counts[table] = cursor.fetchone()[0]
+        
+        conn.close()
+        
+        return jsonify({
+            "status": "ok",
+            "database": "srs_vocab.db",
+            "exists": True,
+            "tables": tables,
+            "row_counts": counts,
+            "timestamp": datetime.now().isoformat()
+        })
+        
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@app.route('/api/debug/test')
+def debug_test():
+    """Simple test endpoint"""
+    return jsonify({
+        "status": "ok",
+        "message": "Flask is running",
+        "time": datetime.now().isoformat()
+    })
+
+@app.route('/api/session/start', methods=['POST'])
+def session_start():
+    """Basic session start endpoint that works without database"""
+    try:
+        data = request.get_json()
+        if not data:
+            return jsonify({"error": "No data provided"}), 400
+
+        session_token = data.get('session_token')
+        if not session_token:
+            # Generate a simple session token if not provided
+            import uuid
+            session_token = f"session_{uuid.uuid4().hex[:16]}"
+
+        return jsonify({
+            "status": "started",
+            "token": session_token,
+            "message": "Session initialized successfully"
+        })
+
+    except Exception as e:
+        # Fallback: always return a session token even on error
+        import uuid
+        fallback_token = f"fallback_{uuid.uuid4().hex[:16]}"
+        print(f"🔥 SESSION START ERROR: {e}", file=sys.stderr)
+        return jsonify({
+            "status": "started",
+            "token": fallback_token,
+            "message": "Session initialized with fallback token",
+            "warning": "Database unavailable, using fallback mode"
+        })
+
+@app.route('/api/session/complete', methods=['POST'])
+def session_complete():
+    data = request.get_json()
+
+    # Validate required fields
+    required = ['session_token', 'total_questions', 'correct_answers', 'accuracy_rate']
+    for field in required:
+        if field not in data:
+            return jsonify({"error": f"Missing field: {field}"}), 400
+
+    conn = get_db()
+    cursor = conn.cursor()
+
+    try:
+        cursor.execute('''
+            UPDATE learning_sessions
+            SET end_time = CURRENT_TIMESTAMP,
+                total_questions = %s,
+                correct_answers = %s,
+                accuracy_rate = %s,
+                completed = 1
+            WHERE session_token = %s
+        ''' if db_adapter.is_postgresql else '''
+            SELECT
+                ls.user_ip,
+                ls.start_time,
+                ls.end_time,
+                ls.total_questions,
+                ls.correct_answers,
+                ls.accuracy_rate,
+                wa.word_id,
+                wa.user_answer,
+                wa.correct,
+                wa.response_time
+            FROM learning_sessions ls
+            LEFT JOIN user_answers wa ON ls.session_token = wa.session_token
+            ORDER BY ls.end_time DESC
+        ''')
+        data = cursor.fetchall()
+        conn.close()
+
+        # Convert to CSV
+        output = io.StringIO()
+        writer = csv.writer(output)
+
+        # Header
+        writer.writerow(['User IP', 'Start Time', 'End Time', 'Total Questions',
+                         'Correct Answers', 'Accuracy', 'Word ID', 'User Answer',
+                         'Is Correct', 'Response Time (s)'])
+
+        # Data
+        for row in data:
+            writer.writerow(row)
+
+        return Response(
+            output.getvalue(),
+            mimetype="text/csv",
+            headers={"Content-disposition": "attachment; filename=learning_data.csv"}
+        )
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/admin')
+def admin_dashboard():
+    return render_template('admin.html')
+
+
+
+
+
+@app.route('/api/debug/test-insert')
+def debug_test_insert():
+    """Test insert data ke learning_sessions"""
+    conn = sqlite3.connect('srs_vocab.db', check_same_thread=False)
+    cursor = conn.cursor()
+
+    try:
+        # Coba insert test data
+        test_token = f"test_{int(datetime.now().timestamp())}"
+        cursor.execute('''
+            INSERT INTO learning_sessions
+            (session_token, start_time, total_questions, correct_answers, accuracy_rate)
+            VALUES (%s, %s, %s, %s, %s)
+        ''', (test_token, datetime.now().isoformat(), 10, 8, 80.0))
+
+        conn.commit()
+        conn.close()
+
+        return jsonify({
+            "status": "test_insert_ok",
+            "test_token": test_token
+        })
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@app.errorhandler(404)
+def api_not_found(e):
+    if request.path.startswith('/api'):
+        return jsonify({"error": "API endpoint not found", "path": request.path}), 404
+    return e
+
+import sqlite3
+import os
+from datetime import datetime
+
+@app.route('/api/debug/db')
+def debug_database():
+    """Check database status"""
+    try:
+        if not os.path.exists('srs_vocab.db'):
+            return jsonify({
+                "error": "Database file not found",
+                "status": "missing"
+            }), 404
+        
+        conn = sqlite3.connect('srs_vocab.db', check_same_thread=False)
+        cursor = conn.cursor()
+        
+        # Get tables
+        cursor.execute("SELECT name FROM sqlite_master WHERE type='table'")
+        tables = [row[0] for row in cursor.fetchall()]
+        
+        # Count rows
+        counts = {}
+        for table in tables:
+            cursor.execute(f"SELECT COUNT(*) FROM {table}")
+            counts[table] = cursor.fetchone()[0]
+        
+        conn.close()
+        
+        return jsonify({
+            "status": "ok",
+            "database": "srs_vocab.db",
+            "exists": True,
+            "tables": tables,
+            "row_counts": counts,
+            "timestamp": datetime.now().isoformat()
+        })
+        
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@app.route('/api/debug/test')
+def debug_test():
+    """Simple test endpoint"""
+    return jsonify({
+        "status": "ok",
+        "message": "Flask is running",
+        "time": datetime.now().isoformat()
+    })
+
+@app.route('/api/session/start', methods=['POST'])
+def session_start():
+    """Basic session start endpoint that works without database"""
+    try:
+        data = request.get_json()
+        if not data:
+            return jsonify({"error": "No data provided"}), 400
+
+        session_token = data.get('session_token')
+        if not session_token:
+            # Generate a simple session token if not provided
+            import uuid
+            session_token = f"session_{uuid.uuid4().hex[:16]}"
+
+        return jsonify({
+            "status": "started",
+            "token": session_token,
+            "message": "Session initialized successfully"
+        })
+
+    except Exception as e:
+        # Fallback: always return a session token even on error
+        import uuid
+        fallback_token = f"fallback_{uuid.uuid4().hex[:16]}"
+        print(f"🔥 SESSION START ERROR: {e}", file=sys.stderr)
+        return jsonify({
+            "status": "started",
+            "token": fallback_token,
+            "message": "Session initialized with fallback token",
+            "warning": "Database unavailable, using fallback mode"
+        })
+
+@app.route('/api/session/complete', methods=['POST'])
+def session_complete():
+    data = request.get_json()
+
+    # Validate required fields
+    required = ['session_token', 'total_questions', 'correct_answers', 'accuracy_rate']
+    for field in required:
+        if field not in data:
+            return jsonify({"error": f"Missing field: {field}"}), 400
+
+    conn = get_db()
+    cursor = conn.cursor()
+
+    try:
+        cursor.execute('''
+            UPDATE learning_sessions
+            SET end_time = CURRENT_TIMESTAMP,
+                total_questions = %s,
+                correct_answers = %s,
+                accuracy_rate = %s,
+                completed = 1
+            WHERE session_token = %s
+        ''' if db_adapter.is_postgresql else '''
+            SELECT
+                ls.user_ip,
+                ls.start_time,
+                ls.end_time,
+                ls.total_questions,
+                ls.correct_answers,
+                ls.accuracy_rate,
+                wa.word_id,
+                wa.user_answer,
+                wa.correct,
+                wa.response_time
+            FROM learning_sessions ls
+            LEFT JOIN user_answers wa ON ls.session_token = wa.session_token
+            ORDER BY ls.end_time DESC
+        ''')
+        data = cursor.fetchall()
+        conn.close()
+
+        # Convert to CSV
+        output = io.StringIO()
+        writer = csv.writer(output)
+
+        # Header
+        writer.writerow(['User IP', 'Start Time', 'End Time', 'Total Questions',
+                         'Correct Answers', 'Accuracy', 'Word ID', 'User Answer',
+                         'Is Correct', 'Response Time (s)'])
+
+        # Data
+        for row in data:
+            writer.writerow(row)
+
+        return Response(
+            output.getvalue(),
+            mimetype="text/csv",
+            headers={"Content-disposition": "attachment; filename=learning_data.csv"}
+        )
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/admin')
+def admin_dashboard():
+    return render_template('admin.html')
+
+
+
+
+
+@app.route('/api/debug/test-insert')
+def debug_test_insert():
+    """Test insert data ke learning_sessions"""
+    conn = sqlite3.connect('srs_vocab.db', check_same_thread=False)
+    cursor = conn.cursor()
+
+    try:
+        # Coba insert test data
+        test_token = f"test_{int(datetime.now().timestamp())}"
+        cursor.execute('''
+            INSERT INTO learning_sessions
+            (session_token, start_time, total_questions, correct_answers, accuracy_rate)
+            VALUES (%s, %s, ?, ?, ?)
+        ''', (test_token, datetime.now().isoformat(), 10, 8, 80.0))
+
+        conn.commit()
+        conn.close()
+
+        return jsonify({
+            "status": "test_insert_ok",
+            "test_token": test_token
+        })
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@app.errorhandler(404)
+def api_not_found(e):
+    if request.path.startswith('/api'):
+        return jsonify({"error": "API endpoint not found", "path": request.path}), 404
+    return e
+
+import sqlite3
+import os
+from datetime import datetime
+
+@app.route('/api/debug/db')
+def debug_database():
+    """Check database status"""
+    try:
+        if not os.path.exists('srs_vocab.db'):
+            return jsonify({
+                "error": "Database file not found",
+                "status": "missing"
+            }), 404
+        
+        conn = sqlite3.connect('srs_vocab.db', check_same_thread=False)
+        cursor = conn.cursor()
+        
+        # Get tables
+        cursor.execute("SELECT name FROM sqlite_master WHERE type='table'")
+        tables = [row[0] for row in cursor.fetchall()]
+        
+        # Count rows
+        counts = {}
+        for table in tables:
+            cursor.execute(f"SELECT COUNT(*) FROM {table}")
+            counts[table] = cursor.fetchone()[0]
+        
+        conn.close()
+        
+        return jsonify({
+            "status": "ok",
+            "database": "srs_vocab.db",
+            "exists": True,
+            "tables": tables,
+            "row_counts": counts,
+            "timestamp": datetime.now().isoformat()
+        })
+        
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@app.route('/api/debug/test')
+def debug_test():
+    """Simple test endpoint"""
+    return jsonify({
+        "status": "ok",
+        "message": "Flask is running",
+        "time": datetime.now().isoformat()
+    })
+
+@app.route('/api/session/start', methods=['POST'])
+def session_start():
+    """Basic session start endpoint that works without database"""
+    try:
+        data = request.get_json()
+        if not data:
+            return jsonify({"error": "No data provided"}), 400
+
+        session_token = data.get('session_token')
+        if not session_token:
+            # Generate a simple session token if not provided
+            import uuid
+            session_token = f"session_{uuid.uuid4().hex[:16]}"
+
+        return jsonify({
+            "status": "started",
+            "token": session_token,
+            "message": "Session initialized successfully"
+        })
+
+    except Exception as e:
+        # Fallback: always return a session token even on error
+        import uuid
+        fallback_token = f"fallback_{uuid.uuid4().hex[:16]}"
+        print(f"🔥 SESSION START ERROR: {e}", file=sys.stderr)
+        return jsonify({
+            "status": "started",
+            "token": fallback_token,
+            "message": "Session initialized with fallback token",
+            "warning": "Database unavailable, using fallback mode"
+        })
+
+@app.route('/api/session/complete', methods=['POST'])
+def session_complete():
+    data = request.get_json()
+
+    # Validate required fields
+    required = ['session_token', 'total_questions', 'correct_answers', 'accuracy_rate']
+    for field in required:
+        if field not in data:
+            return jsonify({"error": f"Missing field: {field}"}), 400
+
+    conn = get_db()
+    cursor = conn.cursor()
+
+    try:
+        cursor.execute('''
+            UPDATE learning_sessions
+            SET end_time = CURRENT_TIMESTAMP,
+                total_questions = ?,
+                correct_answers = ?,
+                accuracy_rate = ?,
+                completed = 1
+            WHERE session_token = ?
+        ''' if db_adapter.is_postgresql else '''
+            SELECT
+                ls.user_ip,
+                ls.start_time,
+                ls.end_time,
+                ls.total_questions,
+                ls.correct_answers,
+                ls.accuracy_rate,
+                wa.word_id,
+                wa.user_answer,
+                wa.correct,
+                wa.response_time
+            FROM learning_sessions ls
+            LEFT JOIN user_answers wa ON ls.session_token = wa.session_token
+            ORDER BY ls.end_time DESC
+        ''')
+        data = cursor.fetchall()
+        conn.close()
+
+        # Convert to CSV
+        output = io.StringIO()
+        writer = csv.writer(output)
+
+        # Header
+        writer.writerow(['User IP', 'Start Time', 'End Time', 'Total Questions',
+                         'Correct Answers', 'Accuracy', 'Word ID', 'User Answer',
+                         'Is Correct', 'Response Time (s)'])
+
+        # Data
+        for row in data:
+            writer.writerow(row)
+
+        return Response(
+            output.getvalue(),
+            mimetype="text/csv",
+            headers={"Content-disposition": "attachment; filename=learning_data.csv"}
+        )
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/admin')
+def admin_dashboard():
+    return render_template('admin.html')
+
+
+
+
+
+@app.route('/api/debug/test-insert')
+def debug_test_insert():
+    """Test insert data ke learning_sessions"""
+    conn = sqlite3.connect('srs_vocab.db', check_same_thread=False)
+    cursor = conn.cursor()
+
+    try:
+        # Coba insert test data
+        test_token = f"test_{int(datetime.now().timestamp())}"
+        cursor.execute('''
+            INSERT INTO learning_sessions
+            (session_token, start_time, total_questions, correct_answers, accuracy_rate)
+            VALUES (?, ?, ?, ?, ?)
+        ''', (test_token, datetime.now().isoformat(), 10, 8, 80.0))
+
+        conn.commit()
+        conn.close()
+
+        return jsonify({
+            "status": "test_insert_ok",
+            "test_token": test_token
+        })
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@app.errorhandler(404)
+def api_not_found(e):
+    if request.path.startswith('/api'):
+        return jsonify({"error": "API endpoint not found", "path": request.path}), 404
+    return e
+
+import sqlite3
+import os
+from datetime import datetime
+
+@app.route('/api/debug/db')
+def debug_database():
+    """Check database status"""
+    try:
+        if not os.path.exists('srs_vocab.db'):
+            return jsonify({
+                "error": "Database file not found",
+                "status": "missing"
+            }), 404
+        
+        conn = sqlite3.connect('srs_vocab.db', check_same_thread=False)
+        cursor = conn.cursor()
+        
+        # Get tables
+        cursor.execute("SELECT name FROM sqlite_master WHERE type='table'")
+        tables = [row[0] for row in cursor.fetchall()]
+        
+        # Count rows
+        counts = {}
+        for table in tables:
+            cursor.execute(f"SELECT COUNT(*) FROM {table}")
+            counts[table] = cursor.fetchone()[0]
+        
+        conn.close()
+        
+        return jsonify({
+            "status": "ok",
+            "database": "srs_vocab.db",
+            "exists": True,
+            "tables": tables,
+            "row_counts": counts,
+            "timestamp": datetime.now().isoformat()
+        })
+        
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@app.route('/api/debug/test')
+def debug_test():
+    """Simple test endpoint"""
+    return jsonify({
+        "status": "ok",
+        "message": "Flask is running",
+        "time": datetime.now().isoformat()
+    })
+
+@app.route('/api/session/start', methods=['POST'])
+def session_start():
+    """Basic session start endpoint that works without database"""
+    try:
+        data = request.get_json()
+        if not data:
+            return jsonify({"error": "No data provided"}), 400
+
+        session_token = data.get('session_token')
+        if not session_token:
+            # Generate a simple session token if not provided
+            import uuid
+            session_token = f"session_{uuid.uuid4().hex[:16]}"
+
+        return jsonify({
+            "status": "started",
+            "token": session_token,
+            "message": "Session initialized successfully"
+        })
+
+    except Exception as e:
+        # Fallback: always return a session token even on error
+        import uuid
+        fallback_token = f"fallback_{uuid.uuid4().hex[:16]}"
+        print(f"🔥 SESSION START ERROR: {e}", file=sys.stderr)
+        return jsonify({
+            "status": "started",
+            "token": fallback_token,
+            "message": "Session initialized with fallback token",
+            "warning": "Database unavailable, using fallback mode"
+        })
+
+@app.route('/api/session/complete', methods=['POST'])
+def session_complete():
+    data = request.get_json()
+
+    # Validate required fields
+    required = ['session_token', 'total_questions', 'correct_answers', 'accuracy_rate']
+    for field in required:
+        if field not in data:
+            return jsonify({"error": f"Missing field: {field}"}), 400
+
+    conn = get_db()
+    cursor = conn.cursor()
+
+    try:
+        cursor.execute('''
+            UPDATE learning_sessions
+            SET end_time = CURRENT_TIMESTAMP,
+                total_questions = ?,
+                correct_answers = ?,
+                accuracy_rate = ?,
+                completed = 1
+            WHERE session_token = ?
+        ''' if db_adapter.is_postgresql else '''
+            SELECT
+                ls.user_ip,
+                ls.start_time,
+                ls.end_time,
+                ls.total_questions,
+                ls.correct_answers,
+                ls.accuracy_rate,
+                wa.word_id,
+                wa.user_answer,
+                wa.correct,
+                wa.response_time
+            FROM learning_sessions ls
+            LEFT JOIN user_answers wa ON ls.session_token = wa.session_token
+            ORDER BY ls.end_time DESC
+        ''')
+        data = cursor.fetchall()
+        conn.close()
+
+        # Convert to CSV
+        output = io.StringIO()
+        writer = csv.writer(output)
+
+        # Header
+        writer.writerow(['User IP', 'Start Time', 'End Time', 'Total Questions',
+                         'Correct Answers', 'Accuracy', 'Word ID', 'User Answer',
+                         'Is Correct', 'Response Time (s)'])
+
+        # Data
+        for row in data:
+            writer.writerow(row)
+
+        return Response(
+            output.getvalue(),
+            mimetype="text/csv",
+            headers={"Content-disposition": "attachment; filename=learning_data.csv"}
+        )
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/admin')
+def admin_dashboard():
+    return render_template('admin.html')
+
+
+
+
+
+@app.route('/api/debug/test-insert')
+def debug_test_insert():
+    """Test insert data ke learning_sessions"""
+    conn = sqlite3.connect('srs_vocab.db', check_same_thread=False)
+    cursor = conn.cursor()
+
+    try:
+        # Coba insert test data
+        test_token = f"test_{int(datetime.now().timestamp())}"
+        cursor.execute('''
+            INSERT INTO learning_sessions
+            (session_token, start_time, total_questions, correct_answers, accuracy_rate)
+            VALUES (%s, ?, ?, ?, ?)
+        ''', (test_token, datetime.now().isoformat(), 10, 8, 80.0))
+
+        conn.commit()
+        conn.close()
+
+        return jsonify({
+            "status": "test_insert_ok",
+            "test_token": test_token
+        })
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@app.errorhandler(404)
+def api_not_found(e):
+    if request.path.startswith('/api'):
+        return jsonify({"error": "API endpoint not found", "path": request.path}), 404
+    return e
+
+import sqlite3
+import os
+from datetime import datetime
+
+@app.route('/api/debug/db')
+def debug_database():
+    """Check database status"""
+    try:
+        if not os.path.exists('srs_vocab.db'):
+            return jsonify({
+                "error": "Database file not found",
+                "status": "missing"
+            }), 404
+        
+        conn = sqlite3.connect('srs_vocab.db', check_same_thread=False)
+        cursor = conn.cursor()
+        
+        # Get tables
+        cursor.execute("SELECT name FROM sqlite_master WHERE type='table'")
+        tables = [row[0] for row in cursor.fetchall()]
+        
+        # Count rows
+        counts = {}
+        for table in tables:
+            cursor.execute(f"SELECT COUNT(*) FROM {table}")
+            counts[table] = cursor.fetchone()[0]
+        
+        conn.close()
+        
+        return jsonify({
+            "status": "ok",
+            "database": "srs_vocab.db",
+            "exists": True,
+            "tables": tables,
+            "row_counts": counts,
+            "timestamp": datetime.now().isoformat()
+        })
+        
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@app.route('/api/debug/test')
+def debug_test():
+    """Simple test endpoint"""
+    return jsonify({
+        "status": "ok",
+        "message": "Flask is running",
+        "time": datetime.now().isoformat()
+    })
+
+@app.route('/api/session/start', methods=['POST'])
+def session_start():
+    """Basic session start endpoint that works without database"""
+    try:
+        data = request.get_json()
+        if not data:
+            return jsonify({"error": "No data provided"}), 400
+
+        session_token = data.get('session_token')
+        if not session_token:
+            # Generate a simple session token if not provided
+            import uuid
+            session_token = f"session_{uuid.uuid4().hex[:16]}"
+
+        return jsonify({
+            "status": "started",
+            "token": session_token,
+            "message": "Session initialized successfully"
+        })
+
+    except Exception as e:
+        # Fallback: always return a session token even on error
+        import uuid
+        fallback_token = f"fallback_{uuid.uuid4().hex[:16]}"
+        print(f"🔥 SESSION START ERROR: {e}", file=sys.stderr)
+        return jsonify({
+            "status": "started",
+            "token": fallback_token,
+            "message": "Session initialized with fallback token",
+            "warning": "Database unavailable, using fallback mode"
+        })
+
+@app.route('/api/session/complete', methods=['POST'])
+def session_complete():
+    data = request.get_json()
+
+    # Validate required fields
+    required = ['session_token', 'total_questions', 'correct_answers', 'accuracy_rate']
+    for field in required:
+        if field not in data:
+            return jsonify({"error": f"Missing field: {field}"}), 400
+
+    conn = get_db()
+    cursor = conn.cursor()
+
+    try:
+        cursor.execute('''
+            UPDATE learning_sessions
+            SET end_time = CURRENT_TIMESTAMP,
+                total_questions = ?,
+                correct_answers = ?,
+                accuracy_rate = ?,
+                completed = 1
+            WHERE session_token = ?
+        ''' if db_adapter.is_postgresql else '''
             SELECT
                 ls.user_ip,
                 ls.start_time,
@@ -981,8 +2748,7 @@ def session_answer():
     try:
         # CEK: apakah session_token valid?
         logger.info(f"🔍 Checking if session_token exists: {data['session_token']}")
-        cursor.execute('SELECT 1 FROM learning_sessions WHERE session_token = ?',
-                      (data['session_token'],))
+        cursor.execute('SELECT 1 FROM learning_sessions WHERE session_token = %s' if db_adapter.is_postgresql else 'SELECT 1 FROM learning_sessions WHERE session_token = %s' if db_adapter.is_postgresql else 'SELECT 1 FROM learning_sessions WHERE session_token = %s' if db_adapter.is_postgresql else 'SELECT 1 FROM learning_sessions WHERE session_token = ?', (data['session_token'],))
         session_exists = cursor.fetchone()
         if not session_exists:
             logger.error(f"❌ Invalid session_token: {data['session_token']}")
@@ -991,7 +2757,7 @@ def session_answer():
 
         # CEK: apakah word_id valid?
         logger.info(f"🔍 Checking if word_id exists: {data['word_id']}")
-        cursor.execute('SELECT 1 FROM words WHERE id = ?', (data['word_id'],))
+        cursor.execute('SELECT 1 FROM words WHERE id = %s' if db_adapter.is_postgresql else 'SELECT 1 FROM words WHERE id = ?', (data['word_id'],))
         word_exists = cursor.fetchone()
         if not word_exists:
             logger.error(f"❌ Invalid word_id: {data['word_id']}")

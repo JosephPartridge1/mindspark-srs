@@ -11,6 +11,41 @@ def plot_review_schedule(user_id, db_path='vocabulary_app.db'):
     cursor.execute('''
         SELECT next_review_date, COUNT(*) 
         FROM review_sessions 
+        WHERE user_id = %s 
+        GROUP BY next_review_date
+    ''' if db_adapter.is_postgresql else '''
+        SELECT next_review_date, COUNT(*) 
+        FROM review_sessions 
+        WHERE user_id = %s 
+        GROUP BY next_review_date
+    ''' if db_adapter.is_postgresql else '''
+        SELECT next_review_date, COUNT(*) 
+        FROM review_sessions 
+        WHERE user_id = %s 
+        GROUP BY next_review_date
+    ''' if db_adapter.is_postgresql else '''
+        SELECT next_review_date, COUNT(*) 
+        FROM review_sessions 
+        WHERE user_id = %s 
+        GROUP BY next_review_date
+    ''' if db_adapter.is_postgresql else '''
+        SELECT next_review_date, COUNT(*) 
+        FROM review_sessions 
+        WHERE user_id = %s 
+        GROUP BY next_review_date
+    ''' if db_adapter.is_postgresql else '''
+        SELECT next_review_date, COUNT(*) 
+        FROM review_sessions 
+        WHERE user_id = %s 
+        GROUP BY next_review_date
+    ''' if db_adapter.is_postgresql else '''
+        SELECT next_review_date, COUNT(*) 
+        FROM review_sessions 
+        WHERE user_id = %s 
+        GROUP BY next_review_date
+    ''' if db_adapter.is_postgresql else '''
+        SELECT next_review_date, COUNT(*) 
+        FROM review_sessions 
         WHERE user_id = ? 
         GROUP BY next_review_date
     ''', (user_id,))
@@ -38,6 +73,41 @@ def plot_retention_curve(user_id, db_path='vocabulary_app.db'):
     cursor = conn.cursor()
     
     cursor.execute('''
+        SELECT review_date, performance_score 
+        FROM review_sessions 
+        WHERE user_id = %s 
+        ORDER BY review_date
+    ''' if db_adapter.is_postgresql else '''
+        SELECT review_date, performance_score 
+        FROM review_sessions 
+        WHERE user_id = %s 
+        ORDER BY review_date
+    ''' if db_adapter.is_postgresql else '''
+        SELECT review_date, performance_score 
+        FROM review_sessions 
+        WHERE user_id = %s 
+        ORDER BY review_date
+    ''' if db_adapter.is_postgresql else '''
+        SELECT review_date, performance_score 
+        FROM review_sessions 
+        WHERE user_id = %s 
+        ORDER BY review_date
+    ''' if db_adapter.is_postgresql else '''
+        SELECT review_date, performance_score 
+        FROM review_sessions 
+        WHERE user_id = %s 
+        ORDER BY review_date
+    ''' if db_adapter.is_postgresql else '''
+        SELECT review_date, performance_score 
+        FROM review_sessions 
+        WHERE user_id = %s 
+        ORDER BY review_date
+    ''' if db_adapter.is_postgresql else '''
+        SELECT review_date, performance_score 
+        FROM review_sessions 
+        WHERE user_id = %s 
+        ORDER BY review_date
+    ''' if db_adapter.is_postgresql else '''
         SELECT review_date, performance_score 
         FROM review_sessions 
         WHERE user_id = ? 
@@ -82,10 +152,38 @@ def generate_report(user_id, db_path='vocabulary_app.db'):
     cursor = conn.cursor()
     
     # Query statistik
-    cursor.execute('SELECT COUNT(*) FROM review_sessions WHERE user_id = ?', (user_id,))
+    cursor.execute('SELECT COUNT(*) FROM review_sessions WHERE user_id = %s' if db_adapter.is_postgresql else 'SELECT COUNT(*) FROM review_sessions WHERE user_id = ?', (user_id,))
     total_reviews = cursor.fetchone()[0]
     
     cursor.execute('''
+        SELECT COUNT(DISTINCT vocab_id) 
+        FROM review_sessions 
+        WHERE user_id = %s AND performance_score >= 3
+    ''' if db_adapter.is_postgresql else '''
+        SELECT COUNT(DISTINCT vocab_id) 
+        FROM review_sessions 
+        WHERE user_id = %s AND performance_score >= 3
+    ''' if db_adapter.is_postgresql else '''
+        SELECT COUNT(DISTINCT vocab_id) 
+        FROM review_sessions 
+        WHERE user_id = %s AND performance_score >= 3
+    ''' if db_adapter.is_postgresql else '''
+        SELECT COUNT(DISTINCT vocab_id) 
+        FROM review_sessions 
+        WHERE user_id = %s AND performance_score >= 3
+    ''' if db_adapter.is_postgresql else '''
+        SELECT COUNT(DISTINCT vocab_id) 
+        FROM review_sessions 
+        WHERE user_id = %s AND performance_score >= 3
+    ''' if db_adapter.is_postgresql else '''
+        SELECT COUNT(DISTINCT vocab_id) 
+        FROM review_sessions 
+        WHERE user_id = %s AND performance_score >= 3
+    ''' if db_adapter.is_postgresql else '''
+        SELECT COUNT(DISTINCT vocab_id) 
+        FROM review_sessions 
+        WHERE user_id = %s AND performance_score >= 3
+    ''' if db_adapter.is_postgresql else '''
         SELECT COUNT(DISTINCT vocab_id) 
         FROM review_sessions 
         WHERE user_id = ? AND performance_score >= 3
@@ -95,11 +193,74 @@ def generate_report(user_id, db_path='vocabulary_app.db'):
     cursor.execute('''
         SELECT AVG(ease_factor) 
         FROM review_sessions 
+        WHERE user_id = %s
+    ''' if db_adapter.is_postgresql else '''
+        SELECT AVG(ease_factor) 
+        FROM review_sessions 
+        WHERE user_id = %s
+    ''' if db_adapter.is_postgresql else '''
+        SELECT AVG(ease_factor) 
+        FROM review_sessions 
+        WHERE user_id = %s
+    ''' if db_adapter.is_postgresql else '''
+        SELECT AVG(ease_factor) 
+        FROM review_sessions 
+        WHERE user_id = %s
+    ''' if db_adapter.is_postgresql else '''
+        SELECT AVG(ease_factor) 
+        FROM review_sessions 
+        WHERE user_id = %s
+    ''' if db_adapter.is_postgresql else '''
+        SELECT AVG(ease_factor) 
+        FROM review_sessions 
+        WHERE user_id = %s
+    ''' if db_adapter.is_postgresql else '''
+        SELECT AVG(ease_factor) 
+        FROM review_sessions 
+        WHERE user_id = %s
+    ''' if db_adapter.is_postgresql else '''
+        SELECT AVG(ease_factor) 
+        FROM review_sessions 
         WHERE user_id = ?
     ''', (user_id,))
     avg_ease = cursor.fetchone()[0] or 0
     
     cursor.execute('''
+        SELECT COUNT(*) 
+        FROM review_sessions 
+        WHERE user_id = %s 
+        AND next_review_date <= date('now')
+    ''' if db_adapter.is_postgresql else '''
+        SELECT COUNT(*) 
+        FROM review_sessions 
+        WHERE user_id = %s 
+        AND next_review_date <= date('now')
+    ''' if db_adapter.is_postgresql else '''
+        SELECT COUNT(*) 
+        FROM review_sessions 
+        WHERE user_id = %s 
+        AND next_review_date <= date('now')
+    ''' if db_adapter.is_postgresql else '''
+        SELECT COUNT(*) 
+        FROM review_sessions 
+        WHERE user_id = %s 
+        AND next_review_date <= date('now')
+    ''' if db_adapter.is_postgresql else '''
+        SELECT COUNT(*) 
+        FROM review_sessions 
+        WHERE user_id = %s 
+        AND next_review_date <= date('now')
+    ''' if db_adapter.is_postgresql else '''
+        SELECT COUNT(*) 
+        FROM review_sessions 
+        WHERE user_id = %s 
+        AND next_review_date <= date('now')
+    ''' if db_adapter.is_postgresql else '''
+        SELECT COUNT(*) 
+        FROM review_sessions 
+        WHERE user_id = %s 
+        AND next_review_date <= date('now')
+    ''' if db_adapter.is_postgresql else '''
         SELECT COUNT(*) 
         FROM review_sessions 
         WHERE user_id = ? 

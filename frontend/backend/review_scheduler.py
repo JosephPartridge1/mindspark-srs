@@ -19,6 +19,83 @@ def load_due_vocabulary(user_id: int):
                rs.next_review_date, rs.ease_factor, rs.interval_days, rs.repetition_count
         FROM vocabulary v
         JOIN review_sessions rs ON v.id = rs.vocab_id
+        WHERE rs.user_id = %s AND rs.next_review_date <= %s
+        ORDER BY
+            CASE WHEN rs.next_review_date < %s THEN 0 ELSE 1 END,  -- Prioritize overdue
+            rs.next_review_date ASC,  -- Most overdue first
+            v.difficulty_score DESC,  -- Highest difficulty first
+            rs.ease_factor ASC  -- Lowest ease first
+    ''' if db_adapter.is_postgresql else '''
+        SELECT v.id, v.english_word, v.indonesian_meaning, v.part_of_speech, v.example_sentence, v.difficulty_score,
+               rs.next_review_date, rs.ease_factor, rs.interval_days, rs.repetition_count
+        FROM vocabulary v
+        JOIN review_sessions rs ON v.id = rs.vocab_id
+        WHERE rs.user_id = %s AND rs.next_review_date <= %s
+        ORDER BY
+            CASE WHEN rs.next_review_date < %s THEN 0 ELSE 1 END,  -- Prioritize overdue
+            rs.next_review_date ASC,  -- Most overdue first
+            v.difficulty_score DESC,  -- Highest difficulty first
+            rs.ease_factor ASC  -- Lowest ease first
+    ''' if db_adapter.is_postgresql else '''
+        SELECT v.id, v.english_word, v.indonesian_meaning, v.part_of_speech, v.example_sentence, v.difficulty_score,
+               rs.next_review_date, rs.ease_factor, rs.interval_days, rs.repetition_count
+        FROM vocabulary v
+        JOIN review_sessions rs ON v.id = rs.vocab_id
+        WHERE rs.user_id = %s AND rs.next_review_date <= %s
+        ORDER BY
+            CASE WHEN rs.next_review_date < %s THEN 0 ELSE 1 END,  -- Prioritize overdue
+            rs.next_review_date ASC,  -- Most overdue first
+            v.difficulty_score DESC,  -- Highest difficulty first
+            rs.ease_factor ASC  -- Lowest ease first
+    ''' if db_adapter.is_postgresql else '''
+        SELECT v.id, v.english_word, v.indonesian_meaning, v.part_of_speech, v.example_sentence, v.difficulty_score,
+               rs.next_review_date, rs.ease_factor, rs.interval_days, rs.repetition_count
+        FROM vocabulary v
+        JOIN review_sessions rs ON v.id = rs.vocab_id
+        WHERE rs.user_id = %s AND rs.next_review_date <= %s
+        ORDER BY
+            CASE WHEN rs.next_review_date < %s THEN 0 ELSE 1 END,  -- Prioritize overdue
+            rs.next_review_date ASC,  -- Most overdue first
+            v.difficulty_score DESC,  -- Highest difficulty first
+            rs.ease_factor ASC  -- Lowest ease first
+    ''' if db_adapter.is_postgresql else '''
+        SELECT v.id, v.english_word, v.indonesian_meaning, v.part_of_speech, v.example_sentence, v.difficulty_score,
+               rs.next_review_date, rs.ease_factor, rs.interval_days, rs.repetition_count
+        FROM vocabulary v
+        JOIN review_sessions rs ON v.id = rs.vocab_id
+        WHERE rs.user_id = %s AND rs.next_review_date <= %s
+        ORDER BY
+            CASE WHEN rs.next_review_date < ? THEN 0 ELSE 1 END,  -- Prioritize overdue
+            rs.next_review_date ASC,  -- Most overdue first
+            v.difficulty_score DESC,  -- Highest difficulty first
+            rs.ease_factor ASC  -- Lowest ease first
+    ''' if db_adapter.is_postgresql else '''
+        SELECT v.id, v.english_word, v.indonesian_meaning, v.part_of_speech, v.example_sentence, v.difficulty_score,
+               rs.next_review_date, rs.ease_factor, rs.interval_days, rs.repetition_count
+        FROM vocabulary v
+        JOIN review_sessions rs ON v.id = rs.vocab_id
+        WHERE rs.user_id = ? AND rs.next_review_date <= ?
+        ORDER BY
+            CASE WHEN rs.next_review_date < ? THEN 0 ELSE 1 END,  -- Prioritize overdue
+            rs.next_review_date ASC,  -- Most overdue first
+            v.difficulty_score DESC,  -- Highest difficulty first
+            rs.ease_factor ASC  -- Lowest ease first
+    ''' if db_adapter.is_postgresql else '''
+        SELECT v.id, v.english_word, v.indonesian_meaning, v.part_of_speech, v.example_sentence, v.difficulty_score,
+               rs.next_review_date, rs.ease_factor, rs.interval_days, rs.repetition_count
+        FROM vocabulary v
+        JOIN review_sessions rs ON v.id = rs.vocab_id
+        WHERE rs.user_id = %s AND rs.next_review_date <= ?
+        ORDER BY
+            CASE WHEN rs.next_review_date < ? THEN 0 ELSE 1 END,  -- Prioritize overdue
+            rs.next_review_date ASC,  -- Most overdue first
+            v.difficulty_score DESC,  -- Highest difficulty first
+            rs.ease_factor ASC  -- Lowest ease first
+    ''' if db_adapter.is_postgresql else '''
+        SELECT v.id, v.english_word, v.indonesian_meaning, v.part_of_speech, v.example_sentence, v.difficulty_score,
+               rs.next_review_date, rs.ease_factor, rs.interval_days, rs.repetition_count
+        FROM vocabulary v
+        JOIN review_sessions rs ON v.id = rs.vocab_id
         WHERE rs.user_id = ? AND rs.next_review_date <= ?
         ORDER BY
             CASE WHEN rs.next_review_date < ? THEN 0 ELSE 1 END,  -- Prioritize overdue

@@ -78,6 +78,90 @@ def test_session_completion():
     # Test 2: Answers saved
     cursor.execute('''
         SELECT COUNT(*) FROM user_answers
+        WHERE session_token = %s
+    ''' if db_adapter.is_postgresql else '''
+        SELECT total_questions, correct_answers, accuracy_rate
+        FROM learning_sessions
+        ORDER BY id DESC LIMIT 1
+    ''')
+    session_data = cursor.fetchone()
+    print(f'Session data: {session_data}')
+
+    # Test 2: Answers saved
+    cursor.execute('''
+        SELECT COUNT(*) FROM user_answers
+        WHERE session_token = %s
+    ''' if db_adapter.is_postgresql else '''
+        SELECT total_questions, correct_answers, accuracy_rate
+        FROM learning_sessions
+        ORDER BY id DESC LIMIT 1
+    ''')
+    session_data = cursor.fetchone()
+    print(f'Session data: {session_data}')
+
+    # Test 2: Answers saved
+    cursor.execute('''
+        SELECT COUNT(*) FROM user_answers
+        WHERE session_token = %s
+    ''' if db_adapter.is_postgresql else '''
+        SELECT total_questions, correct_answers, accuracy_rate
+        FROM learning_sessions
+        ORDER BY id DESC LIMIT 1
+    ''')
+    session_data = cursor.fetchone()
+    print(f'Session data: {session_data}')
+
+    # Test 2: Answers saved
+    cursor.execute('''
+        SELECT COUNT(*) FROM user_answers
+        WHERE session_token = %s
+    ''' if db_adapter.is_postgresql else '''
+        SELECT total_questions, correct_answers, accuracy_rate
+        FROM learning_sessions
+        ORDER BY id DESC LIMIT 1
+    ''')
+    session_data = cursor.fetchone()
+    print(f'Session data: {session_data}')
+
+    # Test 2: Answers saved
+    cursor.execute('''
+        SELECT COUNT(*) FROM user_answers
+        WHERE session_token = %s
+    ''' if db_adapter.is_postgresql else '''
+        SELECT total_questions, correct_answers, accuracy_rate
+        FROM learning_sessions
+        ORDER BY id DESC LIMIT 1
+    ''')
+    session_data = cursor.fetchone()
+    print(f'Session data: {session_data}')
+
+    # Test 2: Answers saved
+    cursor.execute('''
+        SELECT COUNT(*) FROM user_answers
+        WHERE session_token = %s
+    ''' if db_adapter.is_postgresql else '''
+        SELECT total_questions, correct_answers, accuracy_rate
+        FROM learning_sessions
+        ORDER BY id DESC LIMIT 1
+    ''')
+    session_data = cursor.fetchone()
+    print(f'Session data: {session_data}')
+
+    # Test 2: Answers saved
+    cursor.execute('''
+        SELECT COUNT(*) FROM user_answers
+        WHERE session_token = %s
+    ''' if db_adapter.is_postgresql else '''
+        SELECT total_questions, correct_answers, accuracy_rate
+        FROM learning_sessions
+        ORDER BY id DESC LIMIT 1
+    ''')
+    session_data = cursor.fetchone()
+    print(f'Session data: {session_data}')
+
+    # Test 2: Answers saved
+    cursor.execute('''
+        SELECT COUNT(*) FROM user_answers
         WHERE session_token = ?
     ''', (session_token,))
     answer_count = cursor.fetchone()[0]
